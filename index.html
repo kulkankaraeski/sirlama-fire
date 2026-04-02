@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#e63946">
+    <meta name="description" content="Sırlama Prosesi Fire ve Analiz Panosu">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Fire Kontrol">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>Sırlama Prosesi Fire ve Analiz Panosu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { slate: { 850: '#172033' } },
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        .hero-gradient { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%); }
+        .searchable-select { position: relative; }
+        .searchable-select .search-input { width: 100%; padding: 0.5rem 0.75rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; outline: none; transition: all 0.2s; }
+        .searchable-select .search-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+        .searchable-select .dropdown-list { position: absolute; top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 0.5rem; margin-top: 4px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 100; display: none; }
+        .searchable-select .dropdown-list.open { display: block; }
+        .searchable-select .dropdown-item { padding: 0.5rem 0.75rem; cursor: pointer; font-size: 0.875rem; transition: background 0.15s; }
+        .searchable-select .dropdown-item:hover { background: #eff6ff; }
+        .searchable-select .dropdown-item.selected { background: #dbeafe; font-weight: 600; color: #1d4ed8; }
+        .searchable-select .dropdown-item.hidden-item { display: none; }
+        .searchable-select .no-result { padding: 0.5rem 0.75rem; font-size: 0.875rem; color: #94a3b8; font-style: italic; }
+        .fire-entry { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.75rem; position: relative; }
+        .fire-entry .remove-fire-btn { position: absolute; top: 0.375rem; right: 0.375rem; width: 22px; height: 22px; border-radius: 50%; background: #fee2e2; color: #ef4444; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; line-height: 1; transition: all 0.15s; }
+        .fire-entry .remove-fire-btn:hover { background: #fecaca; }
+        .fire-entry select, .fire-entry input { font-size: 0.8125rem; padding: 0.375rem 0.625rem; background: white; border: 1px solid #e2e8f0; border-radius: 0.375rem; width: 100%; outline: none; transition: border-color 0.2s; }
+        .fire-entry select:focus, .fire-entry input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.1); }
+        .fire-entry .fire-aciklama { margin-bottom: 0.5rem; }
+        .fire-entry .fire-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+        .fire-entry label { display: block; font-size: 0.6875rem; font-weight: 600; color: #64748b; margin-bottom: 0.125rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .no-fire-msg { text-align: center; padding: 1.5rem; color: #94a3b8; font-size: 0.8125rem; font-style: italic; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-10">
+
+<div class="hero-gradient text-white">
+    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-400 to-rose-600 flex items-center justify-center shadow-lg">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Fire Kontrol Merkezi</h1>
+                    <p class="text-slate-300 text-sm">Sırlama Prosesi Gerçek Zamanlı Analiz</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="lastUpdate" class="text-slate-400 text-xs"></div>
+                <button onclick="loadProductionData(); loadConstantsData();" class="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-medium transition border border-white/20">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    Yenile
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-10">
+    <div id="error-msg" class="hidden bg-red-500/90 backdrop-blur text-white px-5 py-3 rounded-2xl mb-6 shadow-lg flex items-center gap-3">
+        <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+        <span id="error-text">Veri çekilemedi. Bağlantıyı kontrol edin.</span>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm p-4 mb-6 border-2 border-slate-200">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Başlangıç</label>
+                <input type="date" id="startDate" onchange="updateDashboard()" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 transition">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Bitiş</label>
+                <input type="date" id="endDate" onchange="updateDashboard()" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 transition">
+            </div>
+            <button onclick="resetFilters()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-medium transition flex items-center justify-center gap-2">
+                Temizle
+            </button>
+        </div>
+    </div>
+
+    <div class="mb-6">
+        <h2 class="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+            <span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>
+            Kritik Müdahale Noktaları (En Yüksek Fire Veren 3 Makine)
+        </h2>
+        <div id="alertsContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-5 border-l-4 border-blue-500">
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Toplam Üretim</p>
+            <p class="text-3xl font-black text-slate-800" id="statTotalProd">0</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-5 border-l-4 border-amber-500 relative overflow-hidden">
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Toplam Bisküvi Fire</p>
+            <div class="flex items-end gap-2">
+                <p class="text-3xl font-black text-amber-600" id="statBiskuviFire">0</p>
+                <span class="text-sm font-bold text-amber-500 mb-1" id="statBiskuviRate">%0</span>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-5 border-l-4 border-red-500 relative overflow-hidden">
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Toplam Sırlama Fire</p>
+            <div class="flex items-end gap-2">
+                <p class="text-3xl font-black text-red-600" id="statTotalFire">0</p>
+                <span class="text-sm font-bold text-red-500 mb-1" id="statSirlamaRate">%0</span>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-5 border-l-4 border-emerald-500">
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Aktif Çalışan</p>
+            <p class="text-3xl font-black text-emerald-600" id="statWorkers">0</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
+            <div class="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <h3 class="font-bold text-slate-800 text-sm">Vardiya Bazlı Fire Analizi</h3>
+            </div>
+            <div class="p-5 max-h-[350px] overflow-y-auto">
+                <div id="shiftContainer" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
+            <div class="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    <h3 class="font-bold text-slate-800 text-sm">Tüm Fire Nedenleri Dağılımı</h3>
+                </div>
+                <span id="totalReasonsCountBadge" class="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded-md"></span>
+            </div>
+            <div class="p-5 max-h-[350px] overflow-y-auto">
+                <div id="reasonsContainer" class="space-y-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
+            <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
+                <h3 class="font-bold text-slate-800 text-sm">Makine Performansları</h3>
+            </div>
+            <div class="max-h-80 overflow-y-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-slate-100 sticky top-0">
+                        <tr>
+                            <th class="px-5 py-3 text-left text-xs font-bold text-slate-600 uppercase">Makine</th>
+                            <th class="px-5 py-3 text-right text-xs font-bold text-slate-600 uppercase">Üretim</th>
+                            <th class="px-5 py-3 text-right text-xs font-bold text-slate-600 uppercase">Toplam Fire</th>
+                            <th class="px-5 py-3 text-right text-xs font-bold text-slate-600 uppercase">Oran</th>
+                        </tr>
+                    </thead>
+                    <tbody id="machineTable" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
+            <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
+                <h3 class="font-bold text-slate-800 text-sm">Çalışan Performansları</h3>
+            </div>
+            <div class="max-h-80 overflow-y-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-slate-100 sticky top-0">
+                        <tr>
+                            <th class="px-5 py-3 text-left text-xs font-bold text-slate-600 uppercase">Çalışan</th>
+                            <th class="px-5 py-3 text-right text-xs font-bold text-slate-600 uppercase">Üretim</th>
+                            <th class="px-5 py-3 text-right text-xs font-bold text-slate-600 uppercase">Toplam Fire</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeTable" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200 mb-6 relative">
+        <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between bg-slate-50 gap-4">
+            <div class="flex items-center gap-3">
+                <h3 class="font-bold text-slate-800 text-sm">Günlük Kayıtlar</h3>
+                <span id="dailyCount" class="text-xs font-medium text-slate-500 bg-slate-200 px-2 py-1 rounded-md"></span>
+            </div>
+            <button onclick="openModal()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                Yeni Kayıt Ekle
+            </button>
+        </div>
+        <div class="overflow-x-auto max-h-[400px] overflow-y-auto">
+            <table class="w-full text-sm min-w-[800px]">
+                <thead class="bg-slate-100 sticky top-0 z-10">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase">Tarih</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase">Vardiya</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase">Makine</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase">Çalışan</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase">Açıklama/Neden</th>
+                        <th class="px-4 py-3 text-right text-xs font-bold text-slate-600 uppercase">Üretim</th>
+                        <th class="px-4 py-3 text-right text-xs font-bold text-slate-600 uppercase">Bis. Fire</th>
+                        <th class="px-4 py-3 text-right text-xs font-bold text-slate-600 uppercase">Sır. Fire</th>
+                    </tr>
+                </thead>
+                <tbody id="dailyTable" class="divide-y divide-slate-100"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="addRecordModal" class="fixed inset-0 z-50 hidden">
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
+    
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <div class="relative transform overflow-visible rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
+                <form id="recordForm" onsubmit="submitForm(event)">
+                    <div class="bg-white px-6 pb-4 pt-5 sm:p-6 sm:pb-4 rounded-t-2xl">
+                        <div class="flex justify-between items-center mb-5">
+                            <h3 class="text-xl font-bold leading-6 text-slate-900">Yeni Üretim/Fire Kaydı</h3>
+                            <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-slate-500">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Tarih <span class="text-red-500">*</span></label>
+                                <input type="date" id="formTarih" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Vardiya <span class="text-red-500">*</span></label>
+                                <select id="formVardiya" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <option value="">Seçiniz</option>
+                                    </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Makine <span class="text-red-500">*</span></label>
+                                <select id="formMakine" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <option value="">Seçiniz</option>
+                                    </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Çalışan <span class="text-red-500">*</span></label>
+                                <div class="searchable-select" id="calisanSelectWrapper">
+                                    <input type="text" id="formCalisanSearch" placeholder="Çalışan ara..." class="search-input" autocomplete="off">
+                                    <input type="hidden" id="formCalisan" required>
+                                    <div class="dropdown-list" id="calisanDropdown"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Üretilen Adet <span class="text-red-500">*</span></label>
+                                <input type="number" id="formUretim" required min="0" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                            <div></div>
+
+                            <div class="col-span-2">
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="block text-sm font-semibold text-slate-700">Fire Kayıtları</label>
+                                    <button type="button" onclick="addFireEntry()" class="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                        Fire Ekle
+                                    </button>
+                                </div>
+                                <div id="fireEntriesContainer" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+                                <p id="fireTotals" class="mt-2 text-xs font-semibold text-slate-500"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 px-6 py-4 flex flex-row-reverse rounded-b-2xl">
+                        <button type="submit" id="submitBtn" class="w-full sm:w-auto inline-flex justify-center rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                            Kaydet ve Gönder
+                        </button>
+                        <button type="button" onclick="closeModal()" class="mt-3 sm:mt-0 sm:mr-3 w-full sm:w-auto inline-flex justify-center rounded-xl bg-white px-6 py-2.5 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50">
+                            İptal
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// API Linkiniz (Değiştirilmedi)
+const webAppUrl = "https://script.google.com/macros/s/AKfycbz2olNXOyDUQwPkNvnZo-g22Lq7c9mxW56WrY0J678C4wVtSkPhkgW_pWc0C9PHnqqjbw/exec"; 
+
+const productionUrl = "https://opensheet.elk.sh/1gbMOduXm8aZCwSWfYWYdoNTOwLgEHoKhKWCQlNB3_Sg/1";
+const constantsUrl = "https://opensheet.elk.sh/1gbMOduXm8aZCwSWfYWYdoNTOwLgEHoKhKWCQlNB3_Sg/2"; // Sabit Tanımlar Sayfası
+
+let rawData = [];
+// Sabit verileri tutacağımız Set yapıları (aynı verinin tekrarını önler)
+let constantsData = {
+    calisanlar: new Set(),
+    vardiyalar: new Set(),
+    makineler: new Set(),
+    aciklamalar: new Set()
+};
+
+async function loadProductionData() {
+    try {
+        const res = await fetch(productionUrl);
+        if (!res.ok) throw new Error("Ağ hatası");
+        const data = await res.json();
+        parseProductionData(data);
+        document.getElementById("error-msg").classList.add("hidden");
+    } catch (error) {
+        console.error("Üretim verisi çekilirken hata:", error);
+        document.getElementById("error-text").innerText = "Veri çekilemedi. Bağlantıyı kontrol edin.";
+        document.getElementById("error-msg").classList.remove("hidden");
+    }
+}
+
+// SABİT TANIMLARI E-TABLODAN ÇEKER
+async function loadConstantsData() {
+    try {
+        const res = await fetch(constantsUrl);
+        if (!res.ok) throw new Error("Ağ hatası");
+        const data = await res.json();
+        
+        console.log("Constants raw data:", JSON.stringify(data, null, 2));
+        if (data.length > 0) console.log("First row keys:", Object.keys(data[0]));
+
+        data.forEach(row => {
+            const keys = Object.keys(row);
+            
+            // ÇALIŞAN bul
+            const calisanKey = keys.find(k => k.toUpperCase().replace(/\s/g, '') === 'ÇALIŞAN' || k.toUpperCase().replace(/\s/g, '') === 'CALISAN');
+            if (calisanKey && row[calisanKey]) constantsData.calisanlar.add(row[calisanKey].trim().toUpperCase());
+            
+            // VARDİYA bul
+            const vardiyaKey = keys.find(k => k.toUpperCase().replace(/\s/g, '') === 'VARDİYA' || k.toUpperCase().replace(/\s/g, '') === 'VARDIYA');
+            if (vardiyaKey && row[vardiyaKey]) constantsData.vardiyalar.add(row[vardiyaKey].trim());
+            
+            // MAKİNE bul
+            const makineKey = keys.find(k => k.toUpperCase().replace(/\s/g, '').replace(/İ/g, 'I').replace(/I/g, 'I') === 'MAKINE');
+            if (makineKey && row[makineKey]) constantsData.makineler.add(row[makineKey].trim().toUpperCase());
+            
+            // AÇIKLAMA bul
+            const aciklamaKey = keys.find(k => k.toUpperCase().replace(/\s/g, '') === 'AÇIKLAMA' || k.toUpperCase().replace(/\s/g, '') === 'ACIKLAMA');
+            if (aciklamaKey && row[aciklamaKey]) constantsData.aciklamalar.add(row[aciklamaKey].trim().toUpperCase());
+        });
+
+        console.log("Çalışanlar:", [...constantsData.calisanlar]);
+        console.log("Makineler:", [...constantsData.makineler]);
+        console.log("Vardiyalar:", [...constantsData.vardiyalar]);
+        console.log("Açıklamalar:", [...constantsData.aciklamalar]);
+
+        populateDropdowns();
+    } catch (error) {
+        console.error("Sabit tanımlar çekilirken hata:", error);
+    }
+}
+
+// SELECT LİSTELERİNİ DOLDURUR
+function populateDropdowns() {
+    const vardiyaSelect = document.getElementById("formVardiya");
+    const makineSelect = document.getElementById("formMakine");
+
+    vardiyaSelect.length = 1;
+    makineSelect.length = 1;
+
+    [...constantsData.vardiyalar].sort().forEach(item => vardiyaSelect.add(new Option(item, item)));
+    [...constantsData.makineler].sort().forEach(item => makineSelect.add(new Option(item, item)));
+
+    populateCalisanDropdown();
+}
+
+// ÇALIŞAN ARANABİLİR DROPDOWN
+function populateCalisanDropdown(filter = '') {
+    const dropdown = document.getElementById("calisanDropdown");
+    const hiddenInput = document.getElementById("formCalisan");
+    const searchInput = document.getElementById("formCalisanSearch");
+    const currentValue = hiddenInput.value;
+    
+    dropdown.innerHTML = '';
+    
+    const filteredCalisanlar = [...constantsData.calisanlar]
+        .sort()
+        .filter(item => item.toUpperCase().includes(filter.toUpperCase()));
+    
+    if (filteredCalisanlar.length === 0) {
+        dropdown.innerHTML = '<div class="no-result">Sonuç bulunamadı</div>';
+    } else {
+        filteredCalisanlar.forEach(item => {
+            const div = document.createElement("div");
+            div.className = "dropdown-item" + (item === currentValue ? " selected" : "");
+            div.textContent = item;
+            div.onclick = function() {
+                searchInput.value = item;
+                hiddenInput.value = item;
+                dropdown.classList.remove("open");
+                validateCalisan();
+            };
+            dropdown.appendChild(div);
+        });
+    }
+    
+    if (filter) {
+        dropdown.classList.add("open");
+    }
+}
+
+function validateCalisan() {
+    const searchInput = document.getElementById("formCalisanSearch");
+    const hiddenInput = document.getElementById("formCalisan");
+    if (hiddenInput.value) {
+        searchInput.style.borderColor = "#22c55e";
+    } else {
+        searchInput.style.borderColor = "#e2e8f0";
+    }
+}
+
+(function() {
+    let debounceTimer;
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchInput = document.getElementById("formCalisanSearch");
+        const dropdown = document.getElementById("calisanDropdown");
+        const wrapper = document.getElementById("calisanSelectWrapper");
+        
+        if (!searchInput) return;
+        
+        searchInput.addEventListener("input", function() {
+            clearTimeout(debounceTimer);
+            const val = this.value;
+            debounceTimer = setTimeout(function() {
+                populateCalisanDropdown(val);
+            }, 150);
+        });
+        
+        searchInput.addEventListener("focus", function() {
+            populateCalisanDropdown(this.value);
+        });
+        
+        document.addEventListener("click", function(e) {
+            if (!wrapper.contains(e.target)) {
+                dropdown.classList.remove("open");
+            }
+        });
+    });
+})();
+
+let fireEntryCounter = 0;
+
+function addFireEntry() {
+    const container = document.getElementById("fireEntriesContainer");
+    const noMsg = container.querySelector(".no-fire-msg");
+    if (noMsg) noMsg.remove();
+    
+    const id = fireEntryCounter++;
+    const div = document.createElement("div");
+    div.className = "fire-entry";
+    div.id = "fireEntry_" + id;
+    
+    let aciklamaOptions = '<option value="">Seçiniz</option>';
+    [...constantsData.aciklamalar].sort().forEach(item => {
+        aciklamaOptions += '<option value="' + item + '">' + item + '</option>';
+    });
+    
+    div.innerHTML = `
+        <button type="button" class="remove-fire-btn" onclick="removeFireEntry(${id})" title="Kaldır">×</button>
+        <div class="fire-aciklama">
+            <label>Fire Açıklaması</label>
+            <select class="fire-aciklama-select">${aciklamaOptions}</select>
+        </div>
+        <div class="fire-row">
+            <div>
+                <label>Bisküvi / Sırlama</label>
+                <select class="fire-type-select">
+                    <option value="">Seçiniz</option>
+                    <option value="biskuvi">Bisküvi</option>
+                    <option value="sirlama">Sırlama</option>
+                </select>
+            </div>
+            <div>
+                <label>Adet</label>
+                <input type="number" class="fire-adet-input" min="0" value="" placeholder="0" oninput="updateFireTotals()">
+            </div>
+        </div>
+    `;
+    
+    container.insertBefore(div, container.firstChild);
+    updateFireTotals();
+}
+
+function removeFireEntry(id) {
+    const entry = document.getElementById("fireEntry_" + id);
+    if (entry) {
+        entry.remove();
+        updateFireTotals();
+    }
+    const container = document.getElementById("fireEntriesContainer");
+    if (container.children.length === 0) {
+        container.innerHTML = '<div class="no-fire-msg">Henüz fire kaydı eklenmedi. "+" butonuna tıklayarak ekleyin.</div>';
+    }
+}
+
+function updateFireTotals() {
+    let totalBiskuvi = 0;
+    let totalSirlama = 0;
+    
+    document.querySelectorAll("#fireEntriesContainer .fire-entry").forEach(entry => {
+        const type = entry.querySelector(".fire-type-select").value;
+        const adet = parseInt(entry.querySelector(".fire-adet-input").value) || 0;
+        if (type === "biskuvi") {
+            totalBiskuvi += adet;
+        } else {
+            totalSirlama += adet;
+        }
+    });
+    
+    const totalsEl = document.getElementById("fireTotals");
+    const total = totalBiskuvi + totalSirlama;
+    if (total === 0) {
+        totalsEl.textContent = "";
+    } else {
+        totalsEl.textContent = "Toplam: Bisküvi " + totalBiskuvi + " | Sırlama " + totalSirlama + " | Genel " + total;
+    }
+}
+
+function getFireEntriesData() {
+    const entries = [];
+    document.querySelectorAll("#fireEntriesContainer .fire-entry").forEach(entry => {
+        const aciklama = entry.querySelector(".fire-aciklama-select").value;
+        const type = entry.querySelector(".fire-type-select").value;
+        const adet = parseInt(entry.querySelector(".fire-adet-input").value) || 0;
+        if (aciklama && adet > 0) {
+            entries.push({ aciklama, type, adet });
+        }
+    });
+    return entries;
+}
+
+// Modal Aç/Kapat Fonksiyonları
+function openModal() {
+    document.getElementById('addRecordModal').classList.remove('hidden');
+    document.getElementById('formTarih').valueAsDate = new Date();
+    const container = document.getElementById("fireEntriesContainer");
+    container.innerHTML = '<div class="no-fire-msg">Henüz fire kaydı eklenmedi. "+" butonuna tıklayarak ekleyin.</div>';
+    fireEntryCounter = 0;
+    updateFireTotals();
+}
+
+function closeModal() {
+    document.getElementById('addRecordModal').classList.add('hidden');
+    document.getElementById('recordForm').reset();
+    document.getElementById('formCalisanSearch').value = '';
+    document.getElementById('formCalisanSearch').style.borderColor = '#e2e8f0';
+    document.getElementById('formCalisan').value = '';
+    document.getElementById('calisanDropdown').classList.remove('open');
+    const container = document.getElementById("fireEntriesContainer");
+    container.innerHTML = '<div class="no-fire-msg">Henüz fire kaydı eklenmedi. "+" butonuna tıklayarak ekleyin.</div>';
+    fireEntryCounter = 0;
+    updateFireTotals();
+}
+
+// Form Gönderme Fonksiyonu
+async function submitForm(e) {
+    e.preventDefault();
+    
+    const btn = document.getElementById('submitBtn');
+    const originalText = btn.innerText;
+    btn.innerText = "Gönderiliyor...";
+    btn.disabled = true;
+
+    const rawDate = document.getElementById('formTarih').value;
+    const dateParts = rawDate.split('-');
+    const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
+
+    const fireEntries = getFireEntriesData();
+    let totalBiskuviFire = 0;
+    let totalSirlamaFire = 0;
+    
+    fireEntries.forEach(entry => {
+        if (entry.type === 'biskuvi') {
+            totalBiskuviFire += entry.adet;
+        } else {
+            totalSirlamaFire += entry.adet;
+        }
+    });
+
+    const fireAciklamalari = fireEntries.map(e => e.aciklama).join(', ');
+    const fireTipleri = fireEntries.map(e => e.type).join(', ');
+    const fireAdetleri = fireEntries.map(e => e.adet).join(', ');
+    const toplamFire = totalBiskuviFire + totalSirlamaFire;
+    const uretim = parseInt(document.getElementById('formUretim').value) || 0;
+    const toplamFireOrani = uretim > 0 ? ((toplamFire / uretim) * 100).toFixed(2) : 0;
+
+    const payload = {
+        tarih: formattedDate,
+        vardiya: document.getElementById('formVardiya').value,
+        makine: document.getElementById('formMakine').value,
+        calisan: document.getElementById('formCalisan').value,
+        uretim: uretim,
+        biskuviFire: totalBiskuviFire,
+        sirlamaFire: totalSirlamaFire,
+        aciklama: fireAciklamalari,
+        fireTipleri: fireTipleri,
+        fireAdetleri: fireAdetleri,
+        toplamFireOrani: toplamFireOrani
+    };
+
+    try {
+        await fetch(webAppUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        closeModal();
+        setTimeout(() => { loadProductionData(); }, 2000);
+
+    } catch (error) {
+        alert("Gönderim sırasında hata oluştu. İnternet bağlantınızı kontrol edin.");
+        console.error(error);
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+}
+
+function parseProductionData(data) {
+    rawData = data.filter(d => d.Tarih).map(d => {
+        const parts = d.Tarih.split('.');
+        let dateObj = null;
+        if (parts.length === 3) dateObj = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+        
+        return {
+            tarih: d.Tarih,
+            dateObj: dateObj,
+            calisan: d["Çalışan"] || "",
+            vardiya: d["Vardiya"] || "",
+            makine: d["Makine"] || "",
+            uretilen: parseInt(d["Üretilen Adet"]) || 0,
+            biskuviFire: parseInt(d["Bisküvi Fire Adedi"]) || 0,
+            sirlamaFire: parseInt(d["Sırlama Fire Adedi"]) || 0,
+            aciklama: d["Fire Açıklaması"] || d["Açıklama"] || ""
+        };
+    });
+    setInitialDates();
+    updateDashboard();
+    document.getElementById("lastUpdate").innerText = "Son güncelleme: " + new Date().toLocaleTimeString("tr-TR");
+}
+
+function setInitialDates() {
+    const validDates = rawData.map(d => d.dateObj).filter(d => d !== null);
+    if (validDates.length > 0) {
+        const maxDate = new Date(Math.max(...validDates));
+        const minDate = new Date(maxDate);
+        minDate.setDate(minDate.getDate() - 1);
+        document.getElementById('startDate').value = minDate.toISOString().split('T')[0];
+        document.getElementById('endDate').value = maxDate.toISOString().split('T')[0];
+    }
+}
+
+function resetFilters() {
+    setInitialDates();
+    updateDashboard();
+}
+
+function updateDashboard() {
+    const startInput = document.getElementById('startDate').value;
+    const endInput = document.getElementById('endDate').value;
+    
+    let start = startInput ? new Date(startInput) : new Date('1900-01-01');
+    let end = endInput ? new Date(endInput) : new Date('2100-01-01');
+    end.setHours(23, 59, 59);
+
+    let filtered = rawData.filter(d => {
+        if (!d.dateObj) return false;
+        return d.dateObj >= start && d.dateObj <= end;
+    });
+
+    let machineGroups = {};
+    let employeeGroups = {};
+    let shiftGroups = {};
+    let reasonGroups = {};
+    let processedMachineShifts = new Set();
+    
+    let totalProd = 0, totalSirlamaFire = 0, totalBiskuviFire = 0;
+    const activeWorkers = new Set();
+
+    filtered.forEach(d => {
+        const totalFireRow = d.biskuviFire + d.sirlamaFire;
+
+        if (d.makine) {
+            let shiftKey = `${d.tarih}_${d.vardiya}_${d.makine}`;
+            if (!machineGroups[d.makine]) machineGroups[d.makine] = { uretim: 0, sirlamaFire: 0, biskuviFire: 0 };
+            
+            machineGroups[d.makine].sirlamaFire += d.sirlamaFire;
+            machineGroups[d.makine].biskuviFire += d.biskuviFire;
+            totalSirlamaFire += d.sirlamaFire;
+            totalBiskuviFire += d.biskuviFire;
+
+            if (!processedMachineShifts.has(shiftKey)) {
+                machineGroups[d.makine].uretim += d.uretilen;
+                totalProd += d.uretilen;
+                
+                if (d.vardiya) {
+                    if (!shiftGroups[d.vardiya]) shiftGroups[d.vardiya] = { uretim: 0, fire: 0 };
+                    shiftGroups[d.vardiya].uretim += d.uretilen;
+                }
+                processedMachineShifts.add(shiftKey);
+            }
+        }
+
+        if (d.vardiya) {
+            if (!shiftGroups[d.vardiya]) shiftGroups[d.vardiya] = { uretim: 0, fire: 0 };
+            shiftGroups[d.vardiya].fire += totalFireRow;
+        }
+
+        if (d.calisan) {
+            if (!employeeGroups[d.calisan]) employeeGroups[d.calisan] = { uretim: 0, fire: 0 };
+            employeeGroups[d.calisan].uretim += d.uretilen;
+            employeeGroups[d.calisan].fire += totalFireRow;
+            activeWorkers.add(d.calisan);
+        }
+
+        if (d.aciklama && totalFireRow > 0) {
+            const reasons = d.aciklama.split(/,\s*/).map(r => r.toUpperCase().trim()).filter(r => r);
+            const firePerReason = reasons.length > 0 ? totalFireRow / reasons.length : totalFireRow;
+            reasons.forEach(reason => {
+                if (!reasonGroups[reason]) reasonGroups[reason] = 0;
+                reasonGroups[reason] += Math.round(firePerReason);
+            });
+        }
+    });
+
+    document.getElementById('statTotalProd').innerText = totalProd.toLocaleString('tr-TR');
+    document.getElementById('statBiskuviFire').innerText = totalBiskuviFire.toLocaleString('tr-TR');
+    document.getElementById('statTotalFire').innerText = totalSirlamaFire.toLocaleString('tr-TR');
+    document.getElementById('statWorkers').innerText = activeWorkers.size;
+    
+    document.getElementById('statBiskuviRate').innerText = totalProd > 0 ? "%" + ((totalBiskuviFire / totalProd) * 100).toFixed(2) : "%0";
+    document.getElementById('statSirlamaRate').innerText = totalProd > 0 ? "%" + ((totalSirlamaFire / totalProd) * 100).toFixed(2) : "%0";
+
+    const alertsContainer = document.getElementById('alertsContainer');
+    alertsContainer.innerHTML = '';
+    const sortedMachinesForAlerts = Object.keys(machineGroups)
+        .map(k => ({ makine: k, toplamFire: machineGroups[k].biskuviFire + machineGroups[k].sirlamaFire, uretim: machineGroups[k].uretim }))
+        .filter(m => m.toplamFire > 0)
+        .sort((a,b) => b.toplamFire - a.toplamFire)
+        .slice(0, 3);
+
+    if(sortedMachinesForAlerts.length === 0) {
+        alertsContainer.innerHTML = `<div class="col-span-3 bg-emerald-50 text-emerald-700 p-4 rounded-xl border border-emerald-200 text-sm font-medium flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Harika! Seçili tarih aralığında fire kaydı bulunmuyor.</div>`;
+    } else {
+        sortedMachinesForAlerts.forEach((m, index) => {
+            const oran = m.uretim > 0 ? ((m.toplamFire / m.uretim) * 100).toFixed(1) : 0;
+            alertsContainer.innerHTML += `
+            <div class="bg-red-50 border border-red-200 rounded-xl p-4 flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-red-500 text-white text-xs font-black px-2 py-1 rounded-bl-lg">#${index + 1}</div>
+                <div>
+                    <span class="text-xs font-bold text-red-500 uppercase tracking-wider">Makine</span>
+                    <h4 class="text-lg font-black text-red-900 mb-2">${m.makine}</h4>
+                </div>
+                <div class="flex justify-between items-end">
+                    <div>
+                        <p class="text-2xl font-black text-red-600">${m.toplamFire}</p>
+                        <p class="text-xs font-medium text-red-400">Toplam Fire</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-bold text-red-500">%${oran}</p>
+                        <p class="text-xs font-medium text-red-400">Fire Oranı</p>
+                    </div>
+                </div>
+            </div>`;
+        });
+    }
+
+    const shiftContainer = document.getElementById('shiftContainer');
+    shiftContainer.innerHTML = '';
+    const shifts = Object.keys(shiftGroups).sort();
+    
+    let maxShiftFire = 0;
+    shifts.forEach(s => { if(shiftGroups[s].fire > maxShiftFire) maxShiftFire = shiftGroups[s].fire; });
+
+    shifts.forEach(s => {
+        const uretim = shiftGroups[s].uretim;
+        const fire = shiftGroups[s].fire;
+        const oran = uretim > 0 ? ((fire / uretim) * 100).toFixed(2) : 0;
+        const barWidth = maxShiftFire > 0 ? (fire / maxShiftFire) * 100 : 0;
+        
+        shiftContainer.innerHTML += `
+        <div>
+            <div class="flex justify-between text-sm mb-1">
+                <span class="font-bold text-slate-700">${s}</span>
+                <span class="font-medium text-slate-500">Fire: <b class="text-red-500">${fire}</b> (Üretim: ${uretim.toLocaleString('tr-TR')})</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2.5 flex">
+                <div class="bg-indigo-500 h-2.5 rounded-full transition-all duration-500" style="width: ${barWidth}%"></div>
+            </div>
+            <p class="text-right text-xs text-slate-400 mt-1">Oran: %${oran}</p>
+        </div>`;
+    });
+
+    const reasonsContainer = document.getElementById('reasonsContainer');
+    reasonsContainer.innerHTML = '';
+    
+    const sortedReasons = Object.keys(reasonGroups)
+        .map(k => ({ neden: k, adet: reasonGroups[k] }))
+        .sort((a,b) => b.adet - a.adet);
+
+    const totalDescribedFire = sortedReasons.reduce((sum, item) => sum + item.adet, 0);
+    document.getElementById('totalReasonsCountBadge').innerText = sortedReasons.length + " Farklı Neden";
+
+    let maxReasonCount = sortedReasons.length > 0 ? sortedReasons[0].adet : 0;
+
+    if(sortedReasons.length === 0) {
+        reasonsContainer.innerHTML = '<p class="text-sm text-slate-400 italic">Girilen açıklama/neden verisi bulunamadı.</p>';
+    } else {
+        sortedReasons.forEach((r, index) => {
+            const barWidth = (r.adet / maxReasonCount) * 100;
+            const yuzde = totalDescribedFire > 0 ? ((r.adet / totalDescribedFire) * 100).toFixed(1) : 0;
+
+            reasonsContainer.innerHTML += `
+            <div class="flex items-center gap-3">
+                <div class="w-6 text-center text-xs font-bold text-slate-400">${index + 1}.</div>
+                <div class="flex-1">
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="font-bold text-slate-700 truncate">${r.neden}</span>
+                        <span>
+                            <span class="font-bold text-orange-600">${r.adet} Adet</span>
+                            <span class="font-semibold text-slate-400 ml-1">(%${yuzde})</span>
+                        </span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2">
+                        <div class="bg-orange-400 h-2 rounded-full transition-all duration-500" style="width: ${barWidth}%"></div>
+                    </div>
+                </div>
+            </div>`;
+        });
+    }
+
+    const mTable = document.getElementById('machineTable');
+    mTable.innerHTML = '';
+    Object.keys(machineGroups).sort().forEach(k => {
+        const topFire = machineGroups[k].sirlamaFire + machineGroups[k].biskuviFire;
+        const rate = machineGroups[k].uretim > 0 ? ((topFire / machineGroups[k].uretim) * 100).toFixed(2) : 0;
+        
+        mTable.innerHTML += `<tr class="hover:bg-slate-50 transition">
+            <td class="px-5 py-3 font-medium text-slate-700">${k}</td>
+            <td class="px-5 py-3 text-right font-bold text-slate-800">${machineGroups[k].uretim.toLocaleString('tr-TR')}</td>
+            <td class="px-5 py-3 text-right font-bold ${topFire > 0 ? 'text-red-600' : 'text-slate-400'}">${topFire}</td>
+            <td class="px-5 py-3 text-right text-slate-500 font-medium">%${rate}</td>
+        </tr>`;
+    });
+
+    const eTable = document.getElementById('employeeTable');
+    eTable.innerHTML = '';
+    Object.keys(employeeGroups).sort((a,b) => employeeGroups[b].uretim - employeeGroups[a].uretim).forEach(k => {
+        eTable.innerHTML += `<tr class="hover:bg-slate-50 transition">
+            <td class="px-5 py-3 font-medium text-slate-700">${k}</td>
+            <td class="px-5 py-3 text-right font-bold text-slate-800">${employeeGroups[k].uretim.toLocaleString('tr-TR')}</td>
+            <td class="px-5 py-3 text-right font-bold ${employeeGroups[k].fire > 0 ? 'text-orange-500' : 'text-slate-400'}">${employeeGroups[k].fire}</td>
+        </tr>`;
+    });
+
+    const dTable = document.getElementById('dailyTable');
+    dTable.innerHTML = '';
+    let sortedFiltered = [...filtered].sort((a,b) => b.dateObj - a.dateObj);
+    sortedFiltered.forEach(d => {
+        dTable.innerHTML += `<tr class="hover:bg-slate-50 transition">
+            <td class="px-4 py-3 text-slate-600 whitespace-nowrap">${d.tarih}</td>
+            <td class="px-4 py-3"><span class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded text-xs font-semibold">${d.vardiya}</span></td>
+            <td class="px-4 py-3 font-medium text-slate-700">${d.makine}</td>
+            <td class="px-4 py-3 text-slate-600">${d.calisan}</td>
+            <td class="px-4 py-3 text-xs text-orange-600 font-medium">${d.aciklama}</td>
+            <td class="px-4 py-3 text-right font-bold text-slate-800">${d.uretilen.toLocaleString('tr-TR')}</td>
+            <td class="px-4 py-3 text-right font-medium text-amber-600">${d.biskuviFire > 0 ? d.biskuviFire : '-'}</td>
+            <td class="px-4 py-3 text-right font-bold text-red-600">${d.sirlamaFire > 0 ? d.sirlamaFire : '-'}</td>
+        </tr>`;
+    });
+    document.getElementById("dailyCount").innerText = sortedFiltered.length + " Satır Kayıt";
+}
+
+// SAYFA YÜKLENDİĞİNDE HEM ÜRETİM HEM DE SABİT TANIM VERİLERİ ÇEKİLİR
+window.onload = () => {
+    loadProductionData();
+    loadConstantsData();
+};
+
+// SERVICE WORKER KAYDI
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js')
+            .then(reg => console.log('Service Worker kaydedildi:', reg.scope))
+            .catch(err => console.log('Service Worker kaydedilemedi:', err));
+    });
+}
+</script>
+</body>
+</html>
