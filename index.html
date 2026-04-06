@@ -226,6 +226,30 @@
     </div>
 </div>
 
+<div id="loadingModal" class="fixed inset-0 z-[60] hidden">
+    <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm"></div>
+    <div class="fixed inset-0 flex items-center justify-center">
+        <div class="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4">
+            <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            <p class="text-slate-700 font-bold text-lg">Gönderiliyor...</p>
+        </div>
+    </div>
+</div>
+
+<div id="successModal" class="fixed inset-0 z-[60] hidden">
+    <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm"></div>
+    <div class="fixed inset-0 flex items-center justify-center">
+        <div class="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <p class="text-slate-700 font-bold text-lg">Başarıyla Kaydedildi!</p>
+        </div>
+    </div>
+</div>
+
 <div id="addRecordModal" class="fixed inset-0 z-50 hidden">
     <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
     
@@ -305,7 +329,7 @@
 
 <script>
 // API Linkiniz (Değiştirilmedi)
-const webAppUrl = "https://script.google.com/macros/s/AKfycbz2olNXOyDUQwPkNvnZo-g22Lq7c9mxW56WrY0J678C4wVtSkPhkgW_pWc0C9PHnqqjbw/exec"; 
+const webAppUrl = "https://script.google.com/macros/s/AKfycbwuKTVeugjH0d9lHYJ0kMGcCPiLdSqAyEwE1YQvJf80cPxkInJ5DdvW7eO092LxuXaTSw/exec"; 
 
 const productionUrl = "https://opensheet.elk.sh/1gbMOduXm8aZCwSWfYWYdoNTOwLgEHoKhKWCQlNB3_Sg/1";
 const constantsUrl = "https://opensheet.elk.sh/1gbMOduXm8aZCwSWfYWYdoNTOwLgEHoKhKWCQlNB3_Sg/2"; // Sabit Tanımlar Sayfası
@@ -428,6 +452,7 @@ function validateCalisan() {
     const hiddenInput = document.getElementById("formCalisan");
     if (hiddenInput.value) {
         searchInput.style.borderColor = "#22c55e";
+        searchInput.classList.remove("border-red-500");
     } else {
         searchInput.style.borderColor = "#e2e8f0";
     }
@@ -561,6 +586,9 @@ function openModal() {
     container.innerHTML = '<div class="no-fire-msg">Henüz fire kaydı eklenmedi. "+" butonuna tıklayarak ekleyin.</div>';
     fireEntryCounter = 0;
     updateFireTotals();
+    
+    document.querySelectorAll('.validation-error').forEach(el => el.remove());
+    document.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
 }
 
 function closeModal() {
@@ -574,29 +602,94 @@ function closeModal() {
     container.innerHTML = '<div class="no-fire-msg">Henüz fire kaydı eklenmedi. "+" butonuna tıklayarak ekleyin.</div>';
     fireEntryCounter = 0;
     updateFireTotals();
+    
+    document.querySelectorAll('.validation-error').forEach(el => el.remove());
+    document.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
+}
+
+function validateForm() {
+    let isValid = true;
+    let errorMessages = [];
+    
+    const tarih = document.getElementById('formTarih').value;
+    const vardiya = document.getElementById('formVardiya').value;
+    const makine = document.getElementById('formMakine').value;
+    const calisan = document.getElementById('formCalisan').value;
+    const uretim = document.getElementById('formUretim').value;
+    
+    document.querySelectorAll('.validation-error').forEach(el => el.remove());
+    document.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
+    
+    if (!tarih) {
+        document.getElementById('formTarih').classList.add('border-red-500');
+        errorMessages.push('Tarih');
+        isValid = false;
+    }
+    
+    if (!vardiya) {
+        document.getElementById('formVardiya').classList.add('border-red-500');
+        errorMessages.push('Vardiya');
+        isValid = false;
+    }
+    
+    if (!makine) {
+        document.getElementById('formMakine').classList.add('border-red-500');
+        errorMessages.push('Makine');
+        isValid = false;
+    }
+    
+    if (!calisan) {
+        document.getElementById('formCalisanSearch').classList.add('border-red-500');
+        errorMessages.push('Çalışan');
+        isValid = false;
+    }
+    
+    if (!uretim || parseInt(uretim) < 0) {
+        document.getElementById('formUretim').classList.add('border-red-500');
+        errorMessages.push('Üretilen Adet');
+        isValid = false;
+    }
+    
+    if (!isValid) {
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'validation-error bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm font-medium';
+        errorMsg.innerHTML = `<svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>Lütfen doldurun: ${errorMessages.join(', ')}`;
+        
+        const formContainer = document.querySelector('#recordForm > div');
+        const existingError = formContainer.querySelector('.validation-error');
+        if (!existingError) {
+            formContainer.insertBefore(errorMsg, formContainer.firstChild);
+        }
+    }
+    
+    return isValid;
 }
 
 // Form Gönderme Fonksiyonu
 async function submitForm(e) {
     e.preventDefault();
     
+    if (!validateForm()) {
+        return;
+    }
+    
     const btn = document.getElementById('submitBtn');
     const originalText = btn.innerText;
-    btn.innerText = "Gönderiliyor...";
-    btn.disabled = true;
 
     const rawDate = document.getElementById('formTarih').value;
     const dateParts = rawDate.split('-');
     const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
 
     const fireEntries = getFireEntriesData();
+    console.log("Fire Entries:", fireEntries);
+    
     let totalBiskuviFire = 0;
     let totalSirlamaFire = 0;
     
     fireEntries.forEach(entry => {
         if (entry.type === 'biskuvi') {
             totalBiskuviFire += entry.adet;
-        } else {
+        } else if (entry.type === 'sirlama') {
             totalSirlamaFire += entry.adet;
         }
     });
@@ -619,8 +712,13 @@ async function submitForm(e) {
         aciklama: fireAciklamalari,
         fireTipleri: fireTipleri,
         fireAdetleri: fireAdetleri,
-        toplamFireOrani: toplamFireOrani
+        toplamFire: toplamFire
     };
+    
+    console.log("Payload:", payload);
+    console.log("JSON Payload:", JSON.stringify(payload, null, 2));
+
+    document.getElementById('loadingModal').classList.remove('hidden');
 
     try {
         await fetch(webAppUrl, {
@@ -630,10 +728,18 @@ async function submitForm(e) {
             body: JSON.stringify(payload)
         });
 
+        document.getElementById('loadingModal').classList.add('hidden');
+        document.getElementById('successModal').classList.remove('hidden');
+        
+        setTimeout(() => {
+            document.getElementById('successModal').classList.add('hidden');
+        }, 1500);
+
         closeModal();
-        setTimeout(() => { loadProductionData(); }, 2000);
+        setTimeout(() => { loadProductionData(); }, 1800);
 
     } catch (error) {
+        document.getElementById('loadingModal').classList.add('hidden');
         alert("Gönderim sırasında hata oluştu. İnternet bağlantınızı kontrol edin.");
         console.error(error);
     } finally {
