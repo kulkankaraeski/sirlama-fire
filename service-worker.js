@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fire-kontrol-v2';
+const CACHE_NAME = 'fire-kontrol-v3';
 const urlsToCache = [
   '/',
   '/index.html',
