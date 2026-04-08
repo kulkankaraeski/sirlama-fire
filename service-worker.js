@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fire-kontrol-v1';
+const CACHE_NAME = 'fire-kontrol-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -7,6 +7,8 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
+  // Yeni SW hemen aktif olsun, beklemesin
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -17,19 +19,32 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+
+  // index.html ve ana sayfa için: önce ağdan dene, hata varsa cache'e düş
+  if (url.pathname === '/' || url.pathname.endsWith('index.html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // Gelen güncel cevabı cache'e de yaz
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Diğer kaynaklar (CSS, font vb.) için: önce cache, yoksa ağ
   event.respondWith(
     caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      }
-    )
+      .then(response => response || fetch(event.request))
   );
 });
 
 self.addEventListener('activate', event => {
+  // Eski cache'leri temizle ve hemen kontrolü al
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
@@ -40,6 +55,6 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
