@@ -106,7 +106,8 @@
         <div id="alertsContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
     </div>
 
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+    <!-- ✅ DEĞİŞİKLİK 1: 5 panele çıkarıldı, "Toplam Fire" paneli eklendi -->
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
         <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-5 border-l-4 border-blue-500">
             <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Toplam Üretim</p>
             <p class="text-3xl font-black text-slate-800" id="statTotalProd">0</p>
@@ -123,6 +124,14 @@
             <div class="flex items-end gap-2">
                 <p class="text-3xl font-black text-red-600" id="statTotalFire">0</p>
                 <span class="text-sm font-bold text-red-500 mb-1" id="statSirlamaRate">%0</span>
+            </div>
+        </div>
+        <!-- YENİ PANEL: Toplam Fire -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-5 border-l-4 border-purple-500 relative overflow-hidden">
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Toplam Fire</p>
+            <div class="flex items-end gap-2">
+                <p class="text-3xl font-black text-purple-600" id="statToplamFire">0</p>
+                <span class="text-sm font-bold text-purple-500 mb-1" id="statToplamFireRate">%0</span>
             </div>
         </div>
         <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-5 border-l-4 border-emerald-500">
@@ -176,6 +185,7 @@
             </div>
         </div>
 
+        <!-- ✅ DEĞİŞİKLİK 2: Çalışan tablosuna Bisküvi Fire ve Sırlama Fire sütunları eklendi -->
         <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
             <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
                 <h3 class="font-bold text-slate-800 text-sm">Çalışan Performansları</h3>
@@ -184,9 +194,11 @@
                 <table class="w-full text-sm">
                     <thead class="bg-slate-100 sticky top-0">
                         <tr>
-                            <th class="px-5 py-3 text-left text-xs font-bold text-slate-600 uppercase">Çalışan</th>
-                            <th class="px-5 py-3 text-right text-xs font-bold text-slate-600 uppercase">Üretim</th>
-                            <th class="px-5 py-3 text-right text-xs font-bold text-slate-600 uppercase">Toplam Fire</th>
+                            <th class="px-3 py-3 text-left text-xs font-bold text-slate-600 uppercase">Çalışan</th>
+                            <th class="px-3 py-3 text-right text-xs font-bold text-slate-600 uppercase">Üretim</th>
+                            <th class="px-3 py-3 text-right text-xs font-bold text-amber-600 uppercase">Bis. Fire</th>
+                            <th class="px-3 py-3 text-right text-xs font-bold text-red-600 uppercase">Sır. Fire</th>
+                            <th class="px-3 py-3 text-right text-xs font-bold text-slate-600 uppercase">Top. Fire</th>
                         </tr>
                     </thead>
                     <tbody id="employeeTable" class="divide-y divide-slate-100"></tbody>
@@ -246,6 +258,27 @@
                 </svg>
             </div>
             <p class="text-slate-700 font-bold text-lg">Başarıyla Kaydedildi!</p>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ DEĞİŞİKLİK 3: Günde tek form uyarısı için modal -->
+<div id="duplicateModal" class="fixed inset-0 z-[70] hidden">
+    <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm"></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4 max-w-sm w-full">
+            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
+                <svg class="w-10 h-10 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+            <div class="text-center">
+                <p class="text-slate-800 font-bold text-lg mb-1">Kayıt Zaten Mevcut</p>
+                <p id="duplicateModalText" class="text-slate-500 text-sm"></p>
+            </div>
+            <button onclick="document.getElementById('duplicateModal').classList.add('hidden')" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-6 rounded-xl transition">
+                Tamam
+            </button>
         </div>
     </div>
 </div>
@@ -328,14 +361,12 @@
 </div>
 
 <script>
-// API Linkiniz (Değiştirilmedi)
 const webAppUrl = "https://script.google.com/macros/s/AKfycbwuKTVeugjH0d9lHYJ0kMGcCPiLdSqAyEwE1YQvJf80cPxkInJ5DdvW7eO092LxuXaTSw/exec"; 
 
 const productionUrl = "https://opensheet.elk.sh/1gbMOduXm8aZCwSWfYWYdoNTOwLgEHoKhKWCQlNB3_Sg/1";
-const constantsUrl = "https://opensheet.elk.sh/1gbMOduXm8aZCwSWfYWYdoNTOwLgEHoKhKWCQlNB3_Sg/2"; // Sabit Tanımlar Sayfası
+const constantsUrl = "https://opensheet.elk.sh/1gbMOduXm8aZCwSWfYWYdoNTOwLgEHoKhKWCQlNB3_Sg/2";
 
 let rawData = [];
-// Sabit verileri tutacağımız Set yapıları (aynı verinin tekrarını önler)
 let constantsData = {
     calisanlar: new Set(),
     vardiyalar: new Set(),
@@ -357,40 +388,27 @@ async function loadProductionData() {
     }
 }
 
-// SABİT TANIMLARI E-TABLODAN ÇEKER
 async function loadConstantsData() {
     try {
         const res = await fetch(constantsUrl);
         if (!res.ok) throw new Error("Ağ hatası");
         const data = await res.json();
         
-        console.log("Constants raw data:", JSON.stringify(data, null, 2));
-        if (data.length > 0) console.log("First row keys:", Object.keys(data[0]));
-
         data.forEach(row => {
             const keys = Object.keys(row);
             
-            // ÇALIŞAN bul
             const calisanKey = keys.find(k => k.toUpperCase().replace(/\s/g, '') === 'ÇALIŞAN' || k.toUpperCase().replace(/\s/g, '') === 'CALISAN');
             if (calisanKey && row[calisanKey]) constantsData.calisanlar.add(row[calisanKey].trim().toUpperCase());
             
-            // VARDİYA bul
             const vardiyaKey = keys.find(k => k.toUpperCase().replace(/\s/g, '') === 'VARDİYA' || k.toUpperCase().replace(/\s/g, '') === 'VARDIYA');
             if (vardiyaKey && row[vardiyaKey]) constantsData.vardiyalar.add(row[vardiyaKey].trim());
             
-            // MAKİNE bul
             const makineKey = keys.find(k => k.toUpperCase().replace(/\s/g, '').replace(/İ/g, 'I').replace(/I/g, 'I') === 'MAKINE');
             if (makineKey && row[makineKey]) constantsData.makineler.add(row[makineKey].trim().toUpperCase());
             
-            // AÇIKLAMA bul
             const aciklamaKey = keys.find(k => k.toUpperCase().replace(/\s/g, '') === 'AÇIKLAMA' || k.toUpperCase().replace(/\s/g, '') === 'ACIKLAMA');
             if (aciklamaKey && row[aciklamaKey]) constantsData.aciklamalar.add(row[aciklamaKey].trim().toUpperCase());
         });
-
-        console.log("Çalışanlar:", [...constantsData.calisanlar]);
-        console.log("Makineler:", [...constantsData.makineler]);
-        console.log("Vardiyalar:", [...constantsData.vardiyalar]);
-        console.log("Açıklamalar:", [...constantsData.aciklamalar]);
 
         populateDropdowns();
     } catch (error) {
@@ -398,7 +416,6 @@ async function loadConstantsData() {
     }
 }
 
-// SELECT LİSTELERİNİ DOLDURUR
 function populateDropdowns() {
     const vardiyaSelect = document.getElementById("formVardiya");
     const makineSelect = document.getElementById("formMakine");
@@ -412,7 +429,6 @@ function populateDropdowns() {
     populateCalisanDropdown();
 }
 
-// ÇALIŞAN ARANABİLİR DROPDOWN
 function populateCalisanDropdown(filter = '') {
     const dropdown = document.getElementById("calisanDropdown");
     const hiddenInput = document.getElementById("formCalisan");
@@ -578,7 +594,19 @@ function getFireEntriesData() {
     return entries;
 }
 
-// Modal Aç/Kapat Fonksiyonları
+// ✅ DEĞİŞİKLİK 3: Çalışanın seçili tarihte daha önce kayıt girip girmediğini kontrol eder
+function checkDuplicateEntry(calisan, tarihValue) {
+    // tarihValue: "YYYY-MM-DD" formatında
+    const dateParts = tarihValue.split('-');
+    const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`; // "DD.MM.YYYY"
+    
+    const existing = rawData.find(d => 
+        d.calisan.toUpperCase().trim() === calisan.toUpperCase().trim() && 
+        d.tarih === formattedDate
+    );
+    return existing || null;
+}
+
 function openModal() {
     document.getElementById('addRecordModal').classList.remove('hidden');
     document.getElementById('formTarih').valueAsDate = new Date();
@@ -665,23 +693,35 @@ function validateForm() {
     return isValid;
 }
 
-// Form Gönderme Fonksiyonu
 async function submitForm(e) {
     e.preventDefault();
     
     if (!validateForm()) {
         return;
     }
+
+    // ✅ DEĞİŞİKLİK 3: Mükerrer kayıt kontrolü
+    const calisan = document.getElementById('formCalisan').value;
+    const tarihValue = document.getElementById('formTarih').value;
+    const duplicate = checkDuplicateEntry(calisan, tarihValue);
+
+    if (duplicate) {
+        const dateParts = tarihValue.split('-');
+        const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
+        document.getElementById('duplicateModalText').textContent = 
+            `"${calisan}" adlı çalışan ${formattedDate} tarihinde zaten bir kayıt girmiş. Her çalışan günde yalnızca bir form doldurabilir.`;
+        document.getElementById('duplicateModal').classList.remove('hidden');
+        return;
+    }
     
     const btn = document.getElementById('submitBtn');
     const originalText = btn.innerText;
 
-    const rawDate = document.getElementById('formTarih').value;
+    const rawDate = tarihValue;
     const dateParts = rawDate.split('-');
     const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
 
     const fireEntries = getFireEntriesData();
-    console.log("Fire Entries:", fireEntries);
     
     let totalBiskuviFire = 0;
     let totalSirlamaFire = 0;
@@ -699,13 +739,12 @@ async function submitForm(e) {
     const fireAdetleri = fireEntries.map(e => e.adet).join(', ');
     const toplamFire = totalBiskuviFire + totalSirlamaFire;
     const uretim = parseInt(document.getElementById('formUretim').value) || 0;
-    const toplamFireOrani = uretim > 0 ? ((toplamFire / uretim) * 100).toFixed(2) : 0;
 
     const payload = {
         tarih: formattedDate,
         vardiya: document.getElementById('formVardiya').value,
         makine: document.getElementById('formMakine').value,
-        calisan: document.getElementById('formCalisan').value,
+        calisan: calisan,
         uretim: uretim,
         biskuviFire: totalBiskuviFire,
         sirlamaFire: totalSirlamaFire,
@@ -714,9 +753,6 @@ async function submitForm(e) {
         fireAdetleri: fireAdetleri,
         toplamFire: toplamFire
     };
-    
-    console.log("Payload:", payload);
-    console.log("JSON Payload:", JSON.stringify(payload, null, 2));
 
     document.getElementById('loadingModal').classList.remove('hidden');
 
@@ -839,9 +875,12 @@ function updateDashboard() {
         }
 
         if (d.calisan) {
-            if (!employeeGroups[d.calisan]) employeeGroups[d.calisan] = { uretim: 0, fire: 0 };
+            if (!employeeGroups[d.calisan]) employeeGroups[d.calisan] = { uretim: 0, fire: 0, biskuviFire: 0, sirlamaFire: 0 };
             employeeGroups[d.calisan].uretim += d.uretilen;
             employeeGroups[d.calisan].fire += totalFireRow;
+            // ✅ DEĞİŞİKLİK 2: Çalışan başına bisküvi ve sırlama fire ayrıca toplanıyor
+            employeeGroups[d.calisan].biskuviFire += d.biskuviFire;
+            employeeGroups[d.calisan].sirlamaFire += d.sirlamaFire;
             activeWorkers.add(d.calisan);
         }
 
@@ -855,13 +894,17 @@ function updateDashboard() {
         }
     });
 
+    // ✅ DEĞİŞİKLİK 1: Toplam Fire paneli güncelleniyor
+    const toplamFire = totalBiskuviFire + totalSirlamaFire;
     document.getElementById('statTotalProd').innerText = totalProd.toLocaleString('tr-TR');
     document.getElementById('statBiskuviFire').innerText = totalBiskuviFire.toLocaleString('tr-TR');
     document.getElementById('statTotalFire').innerText = totalSirlamaFire.toLocaleString('tr-TR');
+    document.getElementById('statToplamFire').innerText = toplamFire.toLocaleString('tr-TR');
     document.getElementById('statWorkers').innerText = activeWorkers.size;
     
     document.getElementById('statBiskuviRate').innerText = totalProd > 0 ? "%" + ((totalBiskuviFire / totalProd) * 100).toFixed(2) : "%0";
     document.getElementById('statSirlamaRate').innerText = totalProd > 0 ? "%" + ((totalSirlamaFire / totalProd) * 100).toFixed(2) : "%0";
+    document.getElementById('statToplamFireRate').innerText = totalProd > 0 ? "%" + ((toplamFire / totalProd) * 100).toFixed(2) : "%0";
 
     const alertsContainer = document.getElementById('alertsContainer');
     alertsContainer.innerHTML = '';
@@ -975,13 +1018,17 @@ function updateDashboard() {
         </tr>`;
     });
 
+    // ✅ DEĞİŞİKLİK 2: Çalışan tablosuna Bisküvi Fire ve Sırlama Fire sütunları eklendi
     const eTable = document.getElementById('employeeTable');
     eTable.innerHTML = '';
     Object.keys(employeeGroups).sort((a,b) => employeeGroups[b].uretim - employeeGroups[a].uretim).forEach(k => {
+        const emp = employeeGroups[k];
         eTable.innerHTML += `<tr class="hover:bg-slate-50 transition">
-            <td class="px-5 py-3 font-medium text-slate-700">${k}</td>
-            <td class="px-5 py-3 text-right font-bold text-slate-800">${employeeGroups[k].uretim.toLocaleString('tr-TR')}</td>
-            <td class="px-5 py-3 text-right font-bold ${employeeGroups[k].fire > 0 ? 'text-orange-500' : 'text-slate-400'}">${employeeGroups[k].fire}</td>
+            <td class="px-3 py-3 font-medium text-slate-700">${k}</td>
+            <td class="px-3 py-3 text-right font-bold text-slate-800">${emp.uretim.toLocaleString('tr-TR')}</td>
+            <td class="px-3 py-3 text-right font-bold ${emp.biskuviFire > 0 ? 'text-amber-500' : 'text-slate-300'}">${emp.biskuviFire > 0 ? emp.biskuviFire : '-'}</td>
+            <td class="px-3 py-3 text-right font-bold ${emp.sirlamaFire > 0 ? 'text-red-500' : 'text-slate-300'}">${emp.sirlamaFire > 0 ? emp.sirlamaFire : '-'}</td>
+            <td class="px-3 py-3 text-right font-bold ${emp.fire > 0 ? 'text-orange-500' : 'text-slate-400'}">${emp.fire}</td>
         </tr>`;
     });
 
@@ -1003,13 +1050,11 @@ function updateDashboard() {
     document.getElementById("dailyCount").innerText = sortedFiltered.length + " Satır Kayıt";
 }
 
-// SAYFA YÜKLENDİĞİNDE HEM ÜRETİM HEM DE SABİT TANIM VERİLERİ ÇEKİLİR
 window.onload = () => {
     loadProductionData();
     loadConstantsData();
 };
 
-// SERVICE WORKER KAYDI
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('service-worker.js')
