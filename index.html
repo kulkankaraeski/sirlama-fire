@@ -596,25 +596,59 @@ function getFireEntriesData() {
 
 // ✅ DEĞİŞİKLİK 3: Çalışanın seçili tarihte daha önce kayıt girip girmediğini kontrol eder
 function checkDuplicateEntry(calisan, tarihValue) {
-    // tarihValue: "YYYY-MM-DD" formatında
+    // tarihValue: "YYYY-MM-DD" formatında (UTC+3 Istanbul saati)
+    if (!calisan || !tarihValue || !rawData || rawData.length === 0) {
+        return null;
+    }
+
+    // Form tarihini normalize et (string comparison için)
     const dateParts = tarihValue.split('-');
+    if (dateParts.length !== 3) {
+        return null;
+    }
     const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`; // "DD.MM.YYYY"
-    
-    const existing = rawData.find(d => 
-        d.calisan.toUpperCase().trim() === calisan.toUpperCase().trim() && 
-        d.tarih === formattedDate
-    );
+    const normalizedCalisan = calisan.toUpperCase().trim();
+
+    console.log('Duplicate kontrolü:', { calisan: normalizedCalisan, tarih: formattedDate, rawDataLength: rawData.length });
+
+    // rawData içinde çalışan ve tarih kontrolü
+    const existing = rawData.find(d => {
+        const dataCalisan = d.calisan ? d.calisan.toUpperCase().trim() : '';
+        const dataTarih = d.tarih || '';
+
+        const calisanMatch = dataCalisan === normalizedCalisan;
+        const tarihMatch = dataTarih === formattedDate;
+
+        if (calisanMatch && tarihMatch) {
+            console.log('Duplicate bulundu:', { dataCalisan, dataTarih });
+        }
+
+        return calisanMatch && tarihMatch;
+    });
+
+    if (existing) {
+        console.log('Duplicate kayıt mevcut, engelleniyor');
+    }
+
     return existing || null;
 }
 
 function openModal() {
     document.getElementById('addRecordModal').classList.remove('hidden');
-    document.getElementById('formTarih').valueAsDate = new Date();
+
+    // UTC+3 Istanbul saati için bugünün tarihini ayarla
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayDate = `${year}-${month}-${day}`;
+    document.getElementById('formTarih').value = todayDate;
+
     const container = document.getElementById("fireEntriesContainer");
     container.innerHTML = '<div class="no-fire-msg">Henüz fire kaydı eklenmedi. "+" butonuna tıklayarak ekleyin.</div>';
     fireEntryCounter = 0;
     updateFireTotals();
-    
+
     document.querySelectorAll('.validation-error').forEach(el => el.remove());
     document.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
 }
@@ -695,12 +729,14 @@ function validateForm() {
 
 async function submitForm(e) {
     e.preventDefault();
-    
+
     if (!validateForm()) {
         return;
     }
 
-    // ✅ DEĞİŞİKLİK 3: Mükerrer kayıt kontrolü
+    // ✅ DEĞİŞİKLİK 3: Mükerrer kayıt kontrolü - Önce veriyi yenile
+    await loadProductionData();
+
     const calisan = document.getElementById('formCalisan').value;
     const tarihValue = document.getElementById('formTarih').value;
     const duplicate = checkDuplicateEntry(calisan, tarihValue);
@@ -708,12 +744,12 @@ async function submitForm(e) {
     if (duplicate) {
         const dateParts = tarihValue.split('-');
         const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
-        document.getElementById('duplicateModalText').textContent = 
+        document.getElementById('duplicateModalText').textContent =
             `"${calisan}" adlı çalışan ${formattedDate} tarihinde zaten bir kayıt girmiş. Her çalışan günde yalnızca bir form doldurabilir.`;
         document.getElementById('duplicateModal').classList.remove('hidden');
         return;
     }
-    
+
     const btn = document.getElementById('submitBtn');
     const originalText = btn.innerText;
 
