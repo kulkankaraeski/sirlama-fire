@@ -8,8 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Fire Kontrol">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <!-- Service worker kaldırıldı - manifest ve apple-touch-icon kaldırıldı -->
     <title>Sırlama Prosesi Fire ve Analiz Panosu</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -98,7 +97,7 @@
         </div>
     </div>
 
-    
+
     <div class="mb-6">
         <h2 class="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
             <span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>
@@ -1056,13 +1055,7 @@ window.onload = () => {
     loadConstantsData();
 };
 
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js')
-            .then(reg => console.log('Service Worker kaydedildi:', reg.scope))
-            .catch(err => console.log('Service Worker kaydedilemedi:', err));
-    });
-}
+// Service worker kaldırıldı - sistem güncellemesi için gerekmiyor
 </script>
 </body>
 </html>
