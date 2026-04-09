@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+@<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
@@ -859,6 +859,12 @@ function resetFilters() {
     updateDashboard();
 }
 
+function getRateColorClass(rate) {
+    if (rate <= 3) return 'text-emerald-500'; // %3 ve altı ise Yeşil
+    if (rate <= 5) return 'text-amber-500';   // %3 - %5 arası ise Turuncu
+    return 'text-red-600';                    // %5 üzeri ise Kırmızı
+}
+
 function updateDashboard() {
     const startInput = document.getElementById('startDate').value;
     const endInput = document.getElementById('endDate').value;
@@ -938,9 +944,21 @@ function updateDashboard() {
     document.getElementById('statToplamFire').innerText = toplamFire.toLocaleString('tr-TR');
     document.getElementById('statWorkers').innerText = activeWorkers.size;
     
-    document.getElementById('statBiskuviRate').innerText = totalProd > 0 ? "%" + ((totalBiskuviFire / totalProd) * 100).toFixed(2) : "%0";
-    document.getElementById('statSirlamaRate').innerText = totalProd > 0 ? "%" + ((totalSirlamaFire / totalProd) * 100).toFixed(2) : "%0";
-    document.getElementById('statToplamFireRate').innerText = totalProd > 0 ? "%" + ((toplamFire / totalProd) * 100).toFixed(2) : "%0";
+    const biskuviRate = totalProd > 0 ? ((totalBiskuviFire / totalProd) * 100) : 0;
+    const sirlamaRate = totalProd > 0 ? ((totalSirlamaFire / totalProd) * 100) : 0;
+    const toplamFireRate = totalProd > 0 ? ((toplamFire / totalProd) * 100) : 0;
+
+    const elBiskuviRate = document.getElementById('statBiskuviRate');
+    elBiskuviRate.innerText = "%" + biskuviRate.toFixed(2);
+    elBiskuviRate.className = `text-sm font-bold mb-1 ${getRateColorClass(biskuviRate)}`;
+
+    const elSirlamaRate = document.getElementById('statSirlamaRate');
+    elSirlamaRate.innerText = "%" + sirlamaRate.toFixed(2);
+    elSirlamaRate.className = `text-sm font-bold mb-1 ${getRateColorClass(sirlamaRate)}`;
+
+    const elToplamFireRate = document.getElementById('statToplamFireRate');
+    elToplamFireRate.innerText = "%" + toplamFireRate.toFixed(2);
+    elToplamFireRate.className = `text-sm font-bold mb-1 ${getRateColorClass(toplamFireRate)}`;
 
     const alertsContainer = document.getElementById('alertsContainer');
     alertsContainer.innerHTML = '';
@@ -968,7 +986,7 @@ function updateDashboard() {
                         <p class="text-xs font-medium text-red-400">Toplam Fire</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-lg font-bold text-red-500">%${oran}</p>
+                        <p class="text-lg font-black ${getRateColorClass(parseFloat(oran))} border-b border-red-100">%${oran}</p>
                         <p class="text-xs font-medium text-red-400">Fire Oranı</p>
                     </div>
                 </div>
@@ -998,7 +1016,7 @@ function updateDashboard() {
             <div class="w-full bg-slate-100 rounded-full h-2.5 flex">
                 <div class="bg-indigo-500 h-2.5 rounded-full transition-all duration-500" style="width: ${barWidth}%"></div>
             </div>
-            <p class="text-right text-xs text-slate-400 mt-1">Oran: %${oran}</p>
+            <p class="text-right text-xs font-bold mt-1 ${getRateColorClass(parseFloat(oran))}">Oran: %${oran}</p>
         </div>`;
     });
 
@@ -1050,7 +1068,7 @@ function updateDashboard() {
             <td class="px-5 py-3 font-medium text-slate-700">${k}</td>
             <td class="px-5 py-3 text-right font-bold text-slate-800">${machineGroups[k].uretim.toLocaleString('tr-TR')}</td>
             <td class="px-5 py-3 text-right font-bold ${topFire > 0 ? 'text-red-600' : 'text-slate-400'}">${topFire}</td>
-            <td class="px-5 py-3 text-right text-slate-500 font-medium">%${rate}</td>
+            <td class="px-5 py-3 text-right font-bold ${getRateColorClass(parseFloat(rate))}">%${rate}</td>
         </tr>`;
     });
 
