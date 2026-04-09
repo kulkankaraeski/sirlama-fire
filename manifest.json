@@ -1,0 +1,16 @@
+{
+  "name": "Sırlama Prosesi Fire ve Analiz Panosu",
+  "short_name": "Fire Kontrol",
+  "description": "Sırlama prosesi üretim ve fire takip panosu",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#e63946",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
