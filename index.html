@@ -866,12 +866,6 @@ function getRateColorClass(rate) {
     return 'text-red-600';                    // %5 üzeri ise Kırmızı
 }
 
-function getYuklemeRateColorClass(rate) {
-    if (rate <= 2) return 'text-emerald-500'; // %2 ve altı ise Yeşil
-    if (rate <= 4) return 'text-amber-500';   // %2 - %4 arası ise Turuncu
-    return 'text-red-600';                    // %4 üzeri ise Kırmızı
-}
-
 function updateDashboard() {
     const startInput = document.getElementById('startDate').value;
     const endInput = document.getElementById('endDate').value;
@@ -963,10 +957,6 @@ function updateDashboard() {
     document.getElementById('statTotalFire').innerText = totalSirlamaFire.toLocaleString('tr-TR');
     document.getElementById('statToplamFire').innerText = toplamFire.toLocaleString('tr-TR');
     
-    document.getElementById('statYuklemeProd').innerText = totalYuklemeProd.toLocaleString('tr-TR');
-    document.getElementById('statYuklemeBiskuviFire').innerText = totalYuklemeBiskuviFire.toLocaleString('tr-TR');
-    document.getElementById('statYuklemeSirlamaFire').innerText = totalYuklemeSirlamaFire.toLocaleString('tr-TR');
-    
     document.getElementById('statWorkers').innerText = activeWorkers.size;
     
     const biskuviRate = totalProd > 0 ? ((totalBiskuviFire / totalProd) * 100) : 0;
@@ -984,17 +974,6 @@ function updateDashboard() {
     const elToplamFireRate = document.getElementById('statToplamFireRate');
     elToplamFireRate.innerText = "%" + toplamFireRate.toFixed(2);
     elToplamFireRate.className = `text-sm font-bold mb-1 ${getRateColorClass(toplamFireRate)}`;
-
-    const yuklemeBiskuviRate = totalYuklemeProd > 0 ? ((totalYuklemeBiskuviFire / totalYuklemeProd) * 100) : 0;
-    const yuklemeSirlamaRate = totalYuklemeProd > 0 ? ((totalYuklemeSirlamaFire / totalYuklemeProd) * 100) : 0;
-
-    const elYuklemeBiskuviRate = document.getElementById('statYuklemeBiskuviRate');
-    elYuklemeBiskuviRate.innerText = "%" + yuklemeBiskuviRate.toFixed(2);
-    elYuklemeBiskuviRate.className = `text-sm font-bold mb-1 ${getYuklemeRateColorClass(yuklemeBiskuviRate)}`;
-
-    const elYuklemeSirlamaRate = document.getElementById('statYuklemeSirlamaRate');
-    elYuklemeSirlamaRate.innerText = "%" + yuklemeSirlamaRate.toFixed(2);
-    elYuklemeSirlamaRate.className = `text-sm font-bold mb-1 ${getYuklemeRateColorClass(yuklemeSirlamaRate)}`;
 
     const alertsContainer = document.getElementById('alertsContainer');
     alertsContainer.innerHTML = '';
