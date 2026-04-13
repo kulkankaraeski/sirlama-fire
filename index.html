@@ -892,10 +892,13 @@ function updateDashboard() {
     let processedMachineShifts = new Set();
     
     let totalProd = 0, totalSirlamaFire = 0, totalBiskuviFire = 0;
+    let totalYuklemeProd = 0, totalYuklemeSirlamaFire = 0, totalYuklemeBiskuviFire = 0;
     const activeWorkers = new Set();
 
     filtered.forEach(d => {
         const totalFireRow = d.biskuviFire + d.sirlamaFire;
+        const makineUpper = d.makine ? d.makine.toUpperCase() : "";
+        const isYukleme = makineUpper.includes('YÜKLEME') || makineUpper.includes('YUKLEME');
 
         if (d.makine) {
             let shiftKey = `${d.tarih}_${d.vardiya}_${d.makine}`;
@@ -903,12 +906,23 @@ function updateDashboard() {
             
             machineGroups[d.makine].sirlamaFire += d.sirlamaFire;
             machineGroups[d.makine].biskuviFire += d.biskuviFire;
-            totalSirlamaFire += d.sirlamaFire;
-            totalBiskuviFire += d.biskuviFire;
+            
+            if (isYukleme) {
+                totalYuklemeSirlamaFire += d.sirlamaFire;
+                totalYuklemeBiskuviFire += d.biskuviFire;
+            } else {
+                totalSirlamaFire += d.sirlamaFire;
+                totalBiskuviFire += d.biskuviFire;
+            }
 
             if (!processedMachineShifts.has(shiftKey)) {
                 machineGroups[d.makine].uretim += d.uretilen;
-                totalProd += d.uretilen;
+                
+                if (isYukleme) {
+                    totalYuklemeProd += d.uretilen;
+                } else {
+                    totalProd += d.uretilen;
+                }
                 
                 if (d.vardiya) {
                     if (!shiftGroups[d.vardiya]) shiftGroups[d.vardiya] = { uretim: 0, fire: 0 };
