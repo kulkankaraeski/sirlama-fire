@@ -141,6 +141,30 @@
         </div>
     </div>
 
+    <!-- Yükleme Özeti Panelleri -->
+    <div class="mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div class="bg-slate-800 rounded-2xl shadow-sm p-4 sm:p-5 border-l-4 border-indigo-400">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Yükleme Üretim</p>
+                <p class="text-3xl font-black text-white" id="statYuklemeProd">0</p>
+            </div>
+            <div class="bg-slate-800 rounded-2xl shadow-sm p-4 sm:p-5 border-l-4 border-amber-400 relative overflow-hidden">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Yük. Bisküvi Fire</p>
+                <div class="flex items-end gap-2">
+                    <p class="text-3xl font-black text-amber-400" id="statYuklemeBiskuviFire">0</p>
+                    <span class="text-sm font-bold text-amber-300 mb-1" id="statYuklemeBiskuviRate">%0</span>
+                </div>
+            </div>
+            <div class="bg-slate-800 rounded-2xl shadow-sm p-4 sm:p-5 border-l-4 border-red-400 relative overflow-hidden">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Yük. Sırlama Fire</p>
+                <div class="flex items-end gap-2">
+                    <p class="text-3xl font-black text-red-400" id="statYuklemeSirlamaFire">0</p>
+                    <span class="text-sm font-bold text-red-300 mb-1" id="statYuklemeSirlamaRate">%0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
             <div class="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
@@ -866,6 +890,12 @@ function getRateColorClass(rate) {
     return 'text-red-600';                    // %5 üzeri ise Kırmızı
 }
 
+function getYuklemeRateColorClass(rate) {
+    if (rate <= 2) return 'text-emerald-400'; // %2 ve altı ise Yeşil
+    if (rate <= 4) return 'text-amber-400';   // %2 - %4 arası ise Turuncu
+    return 'text-red-400';                    // %4 üzeri ise Kırmızı
+}
+
 function updateDashboard() {
     const startInput = document.getElementById('startDate').value;
     const endInput = document.getElementById('endDate').value;
@@ -957,6 +987,10 @@ function updateDashboard() {
     document.getElementById('statTotalFire').innerText = totalSirlamaFire.toLocaleString('tr-TR');
     document.getElementById('statToplamFire').innerText = toplamFire.toLocaleString('tr-TR');
     
+    document.getElementById('statYuklemeProd').innerText = totalYuklemeProd.toLocaleString('tr-TR');
+    document.getElementById('statYuklemeBiskuviFire').innerText = totalYuklemeBiskuviFire.toLocaleString('tr-TR');
+    document.getElementById('statYuklemeSirlamaFire').innerText = totalYuklemeSirlamaFire.toLocaleString('tr-TR');
+
     document.getElementById('statWorkers').innerText = activeWorkers.size;
     
     const biskuviRate = totalProd > 0 ? ((totalBiskuviFire / totalProd) * 100) : 0;
@@ -974,6 +1008,17 @@ function updateDashboard() {
     const elToplamFireRate = document.getElementById('statToplamFireRate');
     elToplamFireRate.innerText = "%" + toplamFireRate.toFixed(2);
     elToplamFireRate.className = `text-sm font-bold mb-1 ${getRateColorClass(toplamFireRate)}`;
+
+    const yuklemeBiskuviRate = totalYuklemeProd > 0 ? ((totalYuklemeBiskuviFire / totalYuklemeProd) * 100) : 0;
+    const yuklemeSirlamaRate = totalYuklemeProd > 0 ? ((totalYuklemeSirlamaFire / totalYuklemeProd) * 100) : 0;
+
+    const elYuklemeBiskuviRate = document.getElementById('statYuklemeBiskuviRate');
+    elYuklemeBiskuviRate.innerText = "%" + yuklemeBiskuviRate.toFixed(2);
+    elYuklemeBiskuviRate.className = `text-sm font-bold mb-1 ${getYuklemeRateColorClass(yuklemeBiskuviRate)}`;
+
+    const elYuklemeSirlamaRate = document.getElementById('statYuklemeSirlamaRate');
+    elYuklemeSirlamaRate.innerText = "%" + yuklemeSirlamaRate.toFixed(2);
+    elYuklemeSirlamaRate.className = `text-sm font-bold mb-1 ${getYuklemeRateColorClass(yuklemeSirlamaRate)}`;
 
     const alertsContainer = document.getElementById('alertsContainer');
     alertsContainer.innerHTML = '';
