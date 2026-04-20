@@ -381,7 +381,13 @@
 
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">Çalışan <span class="text-red-500">*</span></label>
-                                <input type="text" id="formCalisanDisplay" readonly class="w-full px-3 py-2 bg-slate-200 border border-slate-300 rounded-lg text-slate-700 font-bold outline-none cursor-not-allowed">
+                                <div id="calisanReadonlyWrapper">
+                                    <input type="text" id="formCalisanDisplay" readonly class="w-full px-3 py-2 bg-slate-200 border border-slate-300 rounded-lg text-slate-700 font-bold outline-none cursor-not-allowed">
+                                </div>
+                                <div id="calisanSelectWrapper" class="hidden searchable-select">
+                                    <input type="text" id="formCalisanSearch" placeholder="Çalışan ara veya seç..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all" autocomplete="off">
+                                    <div class="dropdown-list" id="formCalisanDropdown"></div>
+                                </div>
                                 <input type="hidden" id="formCalisan" required>
                             </div>
 
@@ -542,6 +548,39 @@ function populateLoginDropdown(filter = '') {
     dropdown.classList.add("open");
 }
 
+function populateCalisanDropdown(filter = '') {
+    const dropdown = document.getElementById("formCalisanDropdown");
+    const hiddenInput = document.getElementById("formCalisan");
+    const searchInput = document.getElementById("formCalisanSearch");
+    const currentValue = hiddenInput.value;
+    
+    dropdown.innerHTML = '';
+    
+    const filteredCalisanlar = [...constantsData.calisanlar]
+        .filter(item => item.toUpperCase().includes(filter.toUpperCase()))
+        .sort();
+    
+    if (filteredCalisanlar.length === 0) {
+        dropdown.innerHTML = '<div class="no-result">Çalışan bulunamadı</div>';
+    } else {
+        filteredCalisanlar.forEach(item => {
+            const div = document.createElement("div");
+            div.className = "dropdown-item" + (item === currentValue ? " selected" : "");
+            div.textContent = item;
+            div.onclick = function() {
+                searchInput.value = item;
+                hiddenInput.value = item;
+                dropdown.classList.remove("open");
+                searchInput.style.borderColor = "#22c55e";
+                searchInput.classList.remove("border-red-500");
+            };
+            dropdown.appendChild(div);
+        });
+    }
+    
+    dropdown.classList.add("open");
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     const searchInput = document.getElementById("loginUsernameSearch");
     const dropdown = document.getElementById("loginUsernameDropdown");
@@ -562,6 +601,29 @@ document.addEventListener("DOMContentLoaded", function() {
         document.addEventListener("click", function(e) {
             if (wrapper && !wrapper.contains(e.target) && dropdown) {
                 dropdown.classList.remove("open");
+            }
+        });
+    }
+
+    const calisanSearchInput = document.getElementById("formCalisanSearch");
+    const calisanDropdown = document.getElementById("formCalisanDropdown");
+    const calisanWrapper = document.getElementById("calisanSelectWrapper");
+    
+    if (calisanSearchInput) {
+        let debounceTimer2;
+        calisanSearchInput.addEventListener("input", function() {
+            clearTimeout(debounceTimer2);
+            const val = this.value;
+            document.getElementById("formCalisan").value = ""; 
+            this.style.borderColor = "";
+            debounceTimer2 = setTimeout(function() { populateCalisanDropdown(val); }, 150);
+        });
+        
+        calisanSearchInput.addEventListener("focus", function() { populateCalisanDropdown(this.value); });
+        
+        document.addEventListener("click", function(e) {
+            if (calisanWrapper && !calisanWrapper.contains(e.target) && calisanDropdown) {
+                calisanDropdown.classList.remove("open");
             }
         });
     }
@@ -725,8 +787,19 @@ function openModal() {
     document.getElementById('formTarih').value = todayDate;
 
     if (currentUser) {
-        document.getElementById('formCalisanDisplay').value = currentUser.calisan;
-        document.getElementById('formCalisan').value = currentUser.calisan;
+        const isAdmin = currentUser.username.toLowerCase().includes('admin');
+        if (isAdmin) {
+            document.getElementById('calisanReadonlyWrapper').classList.add('hidden');
+            document.getElementById('calisanSelectWrapper').classList.remove('hidden');
+            document.getElementById('formCalisanSearch').value = '';
+            document.getElementById('formCalisanSearch').style.borderColor = '';
+            document.getElementById('formCalisan').value = '';
+        } else {
+            document.getElementById('calisanReadonlyWrapper').classList.remove('hidden');
+            document.getElementById('calisanSelectWrapper').classList.add('hidden');
+            document.getElementById('formCalisanDisplay').value = currentUser.calisan;
+            document.getElementById('formCalisan').value = currentUser.calisan;
+        }
     }
 
     const container = document.getElementById("fireEntriesContainer");
@@ -742,8 +815,15 @@ function closeModal() {
     document.getElementById('addRecordModal').classList.add('hidden');
     document.getElementById('recordForm').reset();
     if (currentUser) {
-        document.getElementById('formCalisan').value = currentUser.calisan;
-        document.getElementById('formCalisanDisplay').value = currentUser.calisan;
+        const isAdmin = currentUser.username.toLowerCase().includes('admin');
+        if (!isAdmin) {
+            document.getElementById('formCalisan').value = currentUser.calisan;
+            document.getElementById('formCalisanDisplay').value = currentUser.calisan;
+        } else {
+            document.getElementById('formCalisan').value = '';
+            document.getElementById('formCalisanSearch').value = '';
+            document.getElementById('formCalisanSearch').style.borderColor = '';
+        }
     }
     const container = document.getElementById("fireEntriesContainer");
     container.innerHTML = '<div class="no-fire-msg">Henüz fire kaydı eklenmedi. "+" butonuna tıklayarak ekleyin.</div>';
@@ -786,7 +866,12 @@ function validateForm() {
     }
     
     if (!calisan) {
-        document.getElementById('formCalisanDisplay').classList.add('border-red-500');
+        const isAdmin = currentUser && currentUser.username.toLowerCase().includes('admin');
+        if (isAdmin) {
+            document.getElementById('formCalisanSearch').classList.add('border-red-500');
+        } else {
+            document.getElementById('formCalisanDisplay').classList.add('border-red-500');
+        }
         errorMessages.push('Çalışan');
         isValid = false;
     }
@@ -833,9 +918,10 @@ async function submitForm(e) {
 
     const calisan = document.getElementById('formCalisan').value;
     const tarihValue = document.getElementById('formTarih').value;
+    const isAdmin = currentUser && currentUser.username.toLowerCase().includes('admin');
     const duplicate = checkDuplicateEntry(calisan, tarihValue);
 
-    if (duplicate) {
+    if (duplicate && !isAdmin) {
         btn.disabled = false;
         btn.innerText = 'Kaydet ve Gönder';
         const dateParts = tarihValue.split('-');
