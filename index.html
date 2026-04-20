@@ -39,6 +39,14 @@
         .fire-entry .fire-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
         .fire-entry label { display: block; font-size: 0.6875rem; font-weight: 600; color: #64748b; margin-bottom: 0.125rem; text-transform: uppercase; letter-spacing: 0.05em; }
         .no-fire-msg { text-align: center; padding: 1.5rem; color: #94a3b8; font-size: 0.8125rem; font-style: italic; }
+        .searchable-select { position: relative; }
+        .searchable-select .dropdown-list { position: absolute; top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; margin-top: 4px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 100; display: none; }
+        .searchable-select .dropdown-list.open { display: block; }
+        .searchable-select .dropdown-item { padding: 0.75rem 1rem; cursor: pointer; font-size: 0.875rem; transition: background 0.15s; color: #334155; font-weight: 500; border-bottom: 1px solid #f1f5f9; }
+        .searchable-select .dropdown-item:last-child { border-bottom: none; }
+        .searchable-select .dropdown-item:hover { background: #eff6ff; color: #1d4ed8; }
+        .searchable-select .dropdown-item.selected { background: #dbeafe; font-weight: 700; color: #1d4ed8; }
+        .searchable-select .no-result { padding: 0.75rem 1rem; font-size: 0.875rem; color: #94a3b8; font-style: italic; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen pb-10">
@@ -57,7 +65,11 @@
         <form id="loginForm" onsubmit="handleLogin(event)">
             <div class="mb-4">
                 <label class="block text-sm font-semibold text-slate-700 mb-1">Giriş İsmi</label>
-                <input type="text" id="loginUsername" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all">
+                <div class="searchable-select" id="loginUsernameWrapper">
+                    <input type="text" id="loginUsernameSearch" placeholder="İsminizi yazın veya seçin..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all" autocomplete="off">
+                    <input type="hidden" id="loginUsername" required>
+                    <div class="dropdown-list" id="loginUsernameDropdown"></div>
+                </div>
             </div>
             <div class="mb-6">
                 <label class="block text-sm font-semibold text-slate-700 mb-1">Şifre</label>
@@ -460,11 +472,11 @@ async function loadConstantsData() {
             if (aciklamaKey && row[aciklamaKey]) constantsData.aciklamalar.add(row[aciklamaKey].trim().toUpperCase());
             
             const usernameKey = keys.find(k => {
-                const norm = k.toUpperCase().replace(/İ/g, 'I').replace(/\s/g, '');
+                const norm = k.toUpperCase().replace(/İ/g, 'I').replace(/Ş/g, 'S').replace(/\s/g, '');
                 return norm.includes('GIRIS') || norm === 'KULLANICIADI';
             });
             const passwordKey = keys.find(k => {
-                const norm = k.toUpperCase().replace(/İ/g, 'I').replace(/\s/g, '');
+                const norm = k.toUpperCase().replace(/İ/g, 'I').replace(/Ş/g, 'S').replace(/\s/g, '');
                 return norm.includes('SIFRE') || norm === 'PAROLA';
             });
             
@@ -493,6 +505,67 @@ function populateDropdowns() {
     [...constantsData.vardiyalar].sort().forEach(item => vardiyaSelect.add(new Option(item, item)));
     [...constantsData.makineler].sort().forEach(item => makineSelect.add(new Option(item, item)));
 }
+
+function populateLoginDropdown(filter = '') {
+    const dropdown = document.getElementById("loginUsernameDropdown");
+    const hiddenInput = document.getElementById("loginUsername");
+    const searchInput = document.getElementById("loginUsernameSearch");
+    const currentValue = hiddenInput.value;
+    
+    dropdown.innerHTML = '';
+    
+    const filteredUsers = constantsData.users
+        .map(u => u.username)
+        .filter(item => item.toUpperCase().includes(filter.toUpperCase()))
+        .sort();
+    
+    if (filteredUsers.length === 0) {
+        dropdown.innerHTML = '<div class="no-result">Kullanıcı bulunamadı</div>';
+    } else {
+        filteredUsers.forEach(item => {
+            const div = document.createElement("div");
+            div.className = "dropdown-item" + (item === currentValue ? " selected" : "");
+            div.textContent = item;
+            div.onclick = function() {
+                searchInput.value = item;
+                hiddenInput.value = item;
+                dropdown.classList.remove("open");
+                searchInput.style.borderColor = "#22c55e";
+                searchInput.classList.remove("border-red-500");
+                document.getElementById("loginError").classList.add("hidden");
+                document.getElementById("loginPassword").focus();
+            };
+            dropdown.appendChild(div);
+        });
+    }
+    
+    dropdown.classList.add("open");
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const searchInput = document.getElementById("loginUsernameSearch");
+    const dropdown = document.getElementById("loginUsernameDropdown");
+    const wrapper = document.getElementById("loginUsernameWrapper");
+    
+    if (searchInput) {
+        let debounceTimer;
+        searchInput.addEventListener("input", function() {
+            clearTimeout(debounceTimer);
+            const val = this.value;
+            document.getElementById("loginUsername").value = ""; 
+            this.style.borderColor = "";
+            debounceTimer = setTimeout(function() { populateLoginDropdown(val); }, 150);
+        });
+        
+        searchInput.addEventListener("focus", function() { populateLoginDropdown(this.value); });
+        
+        document.addEventListener("click", function(e) {
+            if (wrapper && !wrapper.contains(e.target) && dropdown) {
+                dropdown.classList.remove("open");
+            }
+        });
+    }
+});
 
 let fireEntryCounter = 0;
 
@@ -1133,8 +1206,25 @@ function updateDashboard() {
 
 function handleLogin(e) {
     e.preventDefault();
-    const uname = document.getElementById('loginUsername').value.trim();
+    const searchInputVal = document.getElementById('loginUsernameSearch').value.trim();
+    let uname = document.getElementById('loginUsername').value.trim();
     const pass = document.getElementById('loginPassword').value.trim();
+    
+    if (!uname && searchInputVal) {
+        const exactMatch = constantsData.users.find(u => u.username.toUpperCase() === searchInputVal.toUpperCase());
+        if (exactMatch) {
+            uname = exactMatch.username;
+            document.getElementById('loginUsername').value = uname;
+            document.getElementById('loginUsernameSearch').style.borderColor = "#22c55e";
+        }
+    }
+    
+    if (!uname) {
+        document.getElementById('loginError').innerText = "Lütfen listeden geçerli bir giriş ismi seçin!";
+        document.getElementById('loginError').classList.remove('hidden');
+        document.getElementById('loginUsernameSearch').classList.add('border-red-500');
+        return;
+    }
     
     const user = constantsData.users.find(u => u.username === uname && u.password === pass);
     if (user) {
@@ -1145,6 +1235,8 @@ function handleLogin(e) {
         localStorage.setItem('sirlama_user', JSON.stringify({username: uname, password: pass}));
     } else {
         document.getElementById('loginError').classList.remove('hidden');
+        document.getElementById('loginError').innerText = "Hatalı şifre girdiniz!";
+        document.getElementById('loginPassword').value = '';
     }
 }
 
@@ -1153,6 +1245,8 @@ function handleLogout() {
     localStorage.removeItem('sirlama_user');
     document.getElementById('loginScreen').classList.remove('hidden');
     document.getElementById('loginUsername').value = '';
+    document.getElementById('loginUsernameSearch').value = '';
+    document.getElementById('loginUsernameSearch').style.borderColor = '';
     document.getElementById('loginPassword').value = '';
     document.getElementById('loginError').classList.add('hidden');
 }
