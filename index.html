@@ -787,7 +787,7 @@ function openModal() {
     document.getElementById('formTarih').value = todayDate;
 
     if (currentUser) {
-        const isAdmin = currentUser.username.toLowerCase().includes('admin');
+        const isAdmin = currentUser.username.toLowerCase() === 'admin';
         if (isAdmin) {
             document.getElementById('calisanReadonlyWrapper').classList.add('hidden');
             document.getElementById('calisanSelectWrapper').classList.remove('hidden');
@@ -815,7 +815,7 @@ function closeModal() {
     document.getElementById('addRecordModal').classList.add('hidden');
     document.getElementById('recordForm').reset();
     if (currentUser) {
-        const isAdmin = currentUser.username.toLowerCase().includes('admin');
+        const isAdmin = currentUser.username.toLowerCase() === 'admin';
         if (!isAdmin) {
             document.getElementById('formCalisan').value = currentUser.calisan;
             document.getElementById('formCalisanDisplay').value = currentUser.calisan;
@@ -866,7 +866,7 @@ function validateForm() {
     }
     
     if (!calisan) {
-        const isAdmin = currentUser && currentUser.username.toLowerCase().includes('admin');
+        const isAdmin = currentUser && currentUser.username.toLowerCase() === 'admin';
         if (isAdmin) {
             document.getElementById('formCalisanSearch').classList.add('border-red-500');
         } else {
@@ -918,7 +918,7 @@ async function submitForm(e) {
 
     const calisan = document.getElementById('formCalisan').value;
     const tarihValue = document.getElementById('formTarih').value;
-    const isAdmin = currentUser && currentUser.username.toLowerCase().includes('admin');
+    const isAdmin = currentUser && currentUser.username.toLowerCase() === 'admin';
     const duplicate = checkDuplicateEntry(calisan, tarihValue);
 
     if (duplicate && !isAdmin) {
@@ -1351,7 +1351,13 @@ function handleLogin(e) {
     if (user) {
         currentUser = user;
         document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('currentUserDisplay').innerText = user.calisan;
+        
+        let displayHtml = user.calisan;
+        if (user.username.toLowerCase() === 'admin') {
+            displayHtml += ' <span class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-md ml-2 align-middle shadow-sm border border-red-400">Yönetici</span>';
+        }
+        document.getElementById('currentUserDisplay').innerHTML = displayHtml;
+        
         document.getElementById('loginError').classList.add('hidden');
         document.getElementById('loginPassword').value = '';
         localStorage.setItem('sirlama_user', JSON.stringify({username: uname, password: pass}));
@@ -1390,7 +1396,12 @@ window.onload = async () => {
             if (userExists) {
                 currentUser = userExists;
                 document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('currentUserDisplay').innerText = currentUser.calisan;
+                
+                let displayHtml = currentUser.calisan;
+                if (currentUser.username.toLowerCase() === 'admin') {
+                    displayHtml += ' <span class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-md ml-2 align-middle shadow-sm border border-red-400">Yönetici</span>';
+                }
+                document.getElementById('currentUserDisplay').innerHTML = displayHtml;
             }
         } catch(e) {}
     }
