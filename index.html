@@ -30,16 +30,6 @@
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
         .hero-gradient { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%); }
-        .searchable-select { position: relative; }
-        .searchable-select .search-input { width: 100%; padding: 0.5rem 0.75rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; outline: none; transition: all 0.2s; }
-        .searchable-select .search-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
-        .searchable-select .dropdown-list { position: absolute; top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 0.5rem; margin-top: 4px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 100; display: none; }
-        .searchable-select .dropdown-list.open { display: block; }
-        .searchable-select .dropdown-item { padding: 0.5rem 0.75rem; cursor: pointer; font-size: 0.875rem; transition: background 0.15s; }
-        .searchable-select .dropdown-item:hover { background: #eff6ff; }
-        .searchable-select .dropdown-item.selected { background: #dbeafe; font-weight: 600; color: #1d4ed8; }
-        .searchable-select .dropdown-item.hidden-item { display: none; }
-        .searchable-select .no-result { padding: 0.5rem 0.75rem; font-size: 0.875rem; color: #94a3b8; font-style: italic; }
         .fire-entry { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.75rem; position: relative; }
         .fire-entry .remove-fire-btn { position: absolute; top: 0.375rem; right: 0.375rem; width: 22px; height: 22px; border-radius: 50%; background: #fee2e2; color: #ef4444; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; line-height: 1; transition: all 0.15s; }
         .fire-entry .remove-fire-btn:hover { background: #fecaca; }
@@ -52,6 +42,32 @@
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen pb-10">
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center">
+    <div class="bg-white rounded-2xl p-8 shadow-2xl max-w-md w-full mx-4 relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-red-500 to-rose-600"></div>
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-400 to-rose-600 flex items-center justify-center shadow-lg mx-auto mb-4">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800">Fire Kontrol Merkezi</h2>
+            <p class="text-slate-500 text-sm mt-1">Lütfen devam etmek için giriş yapın</p>
+        </div>
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-slate-700 mb-1">Giriş İsmi</label>
+                <input type="text" id="loginUsername" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all">
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-slate-700 mb-1">Şifre</label>
+                <input type="password" id="loginPassword" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all">
+            </div>
+            <div id="loginError" class="hidden bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4 text-center font-medium border border-red-100">Hatalı giriş ismi veya şifre!</div>
+            <button type="submit" id="loginBtn" disabled class="w-full bg-slate-800 hover:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl transition-colors"><span>Sistem Bekleniyor...</span></button>
+        </form>
+    </div>
+</div>
 
 <div class="hero-gradient text-white">
     <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -66,7 +82,15 @@
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <div id="lastUpdate" class="text-slate-400 text-xs"></div>
+                <div class="hidden sm:block text-right mr-2">
+                    <div class="text-slate-300 text-[10px] uppercase tracking-wider">Aktif Kullanıcı</div>
+                    <div id="currentUserDisplay" class="font-bold text-white text-sm">...</div>
+                </div>
+                <button onclick="handleLogout()" class="p-2 bg-red-500/20 hover:bg-red-500/40 text-red-100 rounded-xl transition border border-red-500/30" title="Çıkış Yap">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                </button>
+                <div class="w-px h-8 bg-white/20 mx-1"></div>
+                <div id="lastUpdate" class="text-slate-400 text-xs hidden sm:block"></div>
                 <button onclick="loadProductionData(); loadConstantsData();" class="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-medium transition border border-white/20">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     Yenile
@@ -345,11 +369,8 @@
 
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">Çalışan <span class="text-red-500">*</span></label>
-                                <div class="searchable-select" id="calisanSelectWrapper">
-                                    <input type="text" id="formCalisanSearch" placeholder="Çalışan ara..." class="search-input" autocomplete="off">
-                                    <input type="hidden" id="formCalisan" required>
-                                    <div class="dropdown-list" id="calisanDropdown"></div>
-                                </div>
+                                <input type="text" id="formCalisanDisplay" readonly class="w-full px-3 py-2 bg-slate-200 border border-slate-300 rounded-lg text-slate-700 font-bold outline-none cursor-not-allowed">
+                                <input type="hidden" id="formCalisan" required>
                             </div>
 
                             <div>
@@ -391,12 +412,14 @@ const webAppUrl = "https://script.google.com/macros/s/AKfycbwuKTVeugjH0d9lHYJ0kM
 const productionUrl = "https://opensheet.elk.sh/1gbMOduXm8aZCwSWfYWYdoNTOwLgEHoKhKWCQlNB3_Sg/1";
 const constantsUrl = "https://opensheet.elk.sh/1gbMOduXm8aZCwSWfYWYdoNTOwLgEHoKhKWCQlNB3_Sg/2";
 
+let currentUser = null;
 let rawData = [];
 let constantsData = {
     calisanlar: new Set(),
     vardiyalar: new Set(),
     makineler: new Set(),
-    aciklamalar: new Set()
+    aciklamalar: new Set(),
+    users: []
 };
 
 async function loadProductionData() {
@@ -419,6 +442,8 @@ async function loadConstantsData() {
         if (!res.ok) throw new Error("Ağ hatası");
         const data = await res.json();
         
+        constantsData.users = [];
+        
         data.forEach(row => {
             const keys = Object.keys(row);
             
@@ -433,6 +458,23 @@ async function loadConstantsData() {
             
             const aciklamaKey = keys.find(k => k.toUpperCase().replace(/\s/g, '') === 'AÇIKLAMA' || k.toUpperCase().replace(/\s/g, '') === 'ACIKLAMA');
             if (aciklamaKey && row[aciklamaKey]) constantsData.aciklamalar.add(row[aciklamaKey].trim().toUpperCase());
+            
+            const usernameKey = keys.find(k => {
+                const norm = k.toUpperCase().replace(/İ/g, 'I').replace(/\s/g, '');
+                return norm.includes('GIRIS') || norm === 'KULLANICIADI';
+            });
+            const passwordKey = keys.find(k => {
+                const norm = k.toUpperCase().replace(/İ/g, 'I').replace(/\s/g, '');
+                return norm.includes('SIFRE') || norm === 'PAROLA';
+            });
+            
+            if (calisanKey && row[calisanKey] && usernameKey && row[usernameKey] && passwordKey && row[passwordKey]) {
+                constantsData.users.push({
+                    calisan: row[calisanKey].trim().toUpperCase(),
+                    username: row[usernameKey].toString().trim(),
+                    password: row[passwordKey].toString().trim()
+                });
+            }
         });
 
         populateDropdowns();
@@ -450,83 +492,7 @@ function populateDropdowns() {
 
     [...constantsData.vardiyalar].sort().forEach(item => vardiyaSelect.add(new Option(item, item)));
     [...constantsData.makineler].sort().forEach(item => makineSelect.add(new Option(item, item)));
-
-    populateCalisanDropdown();
 }
-
-function populateCalisanDropdown(filter = '') {
-    const dropdown = document.getElementById("calisanDropdown");
-    const hiddenInput = document.getElementById("formCalisan");
-    const searchInput = document.getElementById("formCalisanSearch");
-    const currentValue = hiddenInput.value;
-    
-    dropdown.innerHTML = '';
-    
-    const filteredCalisanlar = [...constantsData.calisanlar]
-        .sort()
-        .filter(item => item.toUpperCase().includes(filter.toUpperCase()));
-    
-    if (filteredCalisanlar.length === 0) {
-        dropdown.innerHTML = '<div class="no-result">Sonuç bulunamadı</div>';
-    } else {
-        filteredCalisanlar.forEach(item => {
-            const div = document.createElement("div");
-            div.className = "dropdown-item" + (item === currentValue ? " selected" : "");
-            div.textContent = item;
-            div.onclick = function() {
-                searchInput.value = item;
-                hiddenInput.value = item;
-                dropdown.classList.remove("open");
-                validateCalisan();
-            };
-            dropdown.appendChild(div);
-        });
-    }
-    
-    if (filter) {
-        dropdown.classList.add("open");
-    }
-}
-
-function validateCalisan() {
-    const searchInput = document.getElementById("formCalisanSearch");
-    const hiddenInput = document.getElementById("formCalisan");
-    if (hiddenInput.value) {
-        searchInput.style.borderColor = "#22c55e";
-        searchInput.classList.remove("border-red-500");
-    } else {
-        searchInput.style.borderColor = "#e2e8f0";
-    }
-}
-
-(function() {
-    let debounceTimer;
-    document.addEventListener("DOMContentLoaded", function() {
-        const searchInput = document.getElementById("formCalisanSearch");
-        const dropdown = document.getElementById("calisanDropdown");
-        const wrapper = document.getElementById("calisanSelectWrapper");
-        
-        if (!searchInput) return;
-        
-        searchInput.addEventListener("input", function() {
-            clearTimeout(debounceTimer);
-            const val = this.value;
-            debounceTimer = setTimeout(function() {
-                populateCalisanDropdown(val);
-            }, 150);
-        });
-        
-        searchInput.addEventListener("focus", function() {
-            populateCalisanDropdown(this.value);
-        });
-        
-        document.addEventListener("click", function(e) {
-            if (!wrapper.contains(e.target)) {
-                dropdown.classList.remove("open");
-            }
-        });
-    });
-})();
 
 let fireEntryCounter = 0;
 
@@ -669,6 +635,11 @@ function openModal() {
     const todayDate = `${year}-${month}-${day}`;
     document.getElementById('formTarih').value = todayDate;
 
+    if (currentUser) {
+        document.getElementById('formCalisanDisplay').value = currentUser.calisan;
+        document.getElementById('formCalisan').value = currentUser.calisan;
+    }
+
     const container = document.getElementById("fireEntriesContainer");
     container.innerHTML = '<div class="no-fire-msg">Henüz fire kaydı eklenmedi. "+" butonuna tıklayarak ekleyin.</div>';
     fireEntryCounter = 0;
@@ -681,10 +652,6 @@ function openModal() {
 function closeModal() {
     document.getElementById('addRecordModal').classList.add('hidden');
     document.getElementById('recordForm').reset();
-    document.getElementById('formCalisanSearch').value = '';
-    document.getElementById('formCalisanSearch').style.borderColor = '#e2e8f0';
-    document.getElementById('formCalisan').value = '';
-    document.getElementById('calisanDropdown').classList.remove('open');
     const container = document.getElementById("fireEntriesContainer");
     container.innerHTML = '<div class="no-fire-msg">Henüz fire kaydı eklenmedi. "+" butonuna tıklayarak ekleyin.</div>';
     fireEntryCounter = 0;
@@ -726,7 +693,7 @@ function validateForm() {
     }
     
     if (!calisan) {
-        document.getElementById('formCalisanSearch').classList.add('border-red-500');
+        document.getElementById('formCalisanDisplay').classList.add('border-red-500');
         errorMessages.push('Çalışan');
         isValid = false;
     }
@@ -1164,9 +1131,55 @@ function updateDashboard() {
     document.getElementById("dailyCount").innerText = sortedFiltered.length + " Satır Kayıt";
 }
 
-window.onload = () => {
+function handleLogin(e) {
+    e.preventDefault();
+    const uname = document.getElementById('loginUsername').value.trim();
+    const pass = document.getElementById('loginPassword').value.trim();
+    
+    const user = constantsData.users.find(u => u.username === uname && u.password === pass);
+    if (user) {
+        currentUser = user;
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('currentUserDisplay').innerText = user.calisan;
+        document.getElementById('loginError').classList.add('hidden');
+        localStorage.setItem('sirlama_user', JSON.stringify({username: uname, password: pass}));
+    } else {
+        document.getElementById('loginError').classList.remove('hidden');
+    }
+}
+
+function handleLogout() {
+    currentUser = null;
+    localStorage.removeItem('sirlama_user');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('loginUsername').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('loginError').classList.add('hidden');
+}
+
+window.onload = async () => {
+    await loadConstantsData();
+    
+    const loginBtn = document.getElementById('loginBtn');
+    if(loginBtn) {
+        loginBtn.disabled = false;
+        loginBtn.querySelector('span').innerText = "Giriş Yap";
+    }
+    
+    const savedUser = localStorage.getItem('sirlama_user');
+    if (savedUser) {
+        try {
+            const parsed = JSON.parse(savedUser);
+            const userExists = constantsData.users.find(u => u.username === parsed.username && u.password === parsed.password);
+            if (userExists) {
+                currentUser = userExists;
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('currentUserDisplay').innerText = currentUser.calisan;
+            }
+        } catch(e) {}
+    }
+
     loadProductionData();
-    loadConstantsData();
 };
 
 // Service worker kaldırıldı - sistem güncellemesi için gerekmiyor
