@@ -486,9 +486,10 @@ async function loadConstantsData() {
                 return norm.includes('SIFRE') || norm === 'PAROLA';
             });
             
-            if (calisanKey && row[calisanKey] && usernameKey && row[usernameKey] && passwordKey && row[passwordKey]) {
+            if (usernameKey && row[usernameKey] && passwordKey && row[passwordKey]) {
+                const calisanVal = (calisanKey && row[calisanKey]) ? row[calisanKey].trim().toUpperCase() : row[usernameKey].toString().trim().toUpperCase();
                 constantsData.users.push({
-                    calisan: row[calisanKey].trim().toUpperCase(),
+                    calisan: calisanVal,
                     username: row[usernameKey].toString().trim(),
                     password: row[passwordKey].toString().trim()
                 });
