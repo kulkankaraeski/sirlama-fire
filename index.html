@@ -593,7 +593,7 @@ function addFireEntry() {
         <div class="fire-row">
             <div>
                 <label>Bisküvi / Sırlama</label>
-                <select class="fire-type-select">
+                <select class="fire-type-select" onchange="updateFireTotals()">
                     <option value="">Seçiniz</option>
                     <option value="biskuvi">Bisküvi</option>
                     <option value="sirlama">Sırlama</option>
@@ -651,11 +651,27 @@ function getFireEntriesData() {
         const aciklama = entry.querySelector(".fire-aciklama-select").value;
         const type = entry.querySelector(".fire-type-select").value;
         const adet = parseInt(entry.querySelector(".fire-adet-input").value) || 0;
-        if (aciklama && adet > 0) {
+        if (aciklama && type && adet > 0) {
             entries.push({ aciklama, type, adet });
         }
     });
     return entries;
+}
+
+function validateFireEntries() {
+    let hasInvalidEntry = false;
+    document.querySelectorAll("#fireEntriesContainer .fire-entry").forEach(entry => {
+        const aciklama = entry.querySelector(".fire-aciklama-select").value;
+        const type = entry.querySelector(".fire-type-select").value;
+        const adet = parseInt(entry.querySelector(".fire-adet-input").value) || 0;
+        if ((aciklama || adet > 0) && !type) {
+            hasInvalidEntry = true;
+            entry.querySelector(".fire-type-select").style.borderColor = "#ef4444";
+        } else {
+            entry.querySelector(".fire-type-select").style.borderColor = "";
+        }
+    });
+    return !hasInvalidEntry;
 }
 
 // ✅ DEĞİŞİKLİK 3: Çalışanın seçili tarihte daha önce kayıt girip girmediğini kontrol eder
@@ -725,6 +741,10 @@ function openModal() {
 function closeModal() {
     document.getElementById('addRecordModal').classList.add('hidden');
     document.getElementById('recordForm').reset();
+    if (currentUser) {
+        document.getElementById('formCalisan').value = currentUser.calisan;
+        document.getElementById('formCalisanDisplay').value = currentUser.calisan;
+    }
     const container = document.getElementById("fireEntriesContainer");
     container.innerHTML = '<div class="no-fire-msg">Henüz fire kaydı eklenmedi. "+" butonuna tıklayarak ekleyin.</div>';
     fireEntryCounter = 0;
@@ -776,6 +796,11 @@ function validateForm() {
         errorMessages.push('Üretilen Adet');
         isValid = false;
     }
+
+    if (!validateFireEntries()) {
+        errorMessages.push('Fire türü seçilmemiş (Bisküvi/Sırlama)');
+        isValid = false;
+    }
     
     if (!isValid) {
         const errorMsg = document.createElement('div');
@@ -799,6 +824,10 @@ async function submitForm(e) {
         return;
     }
 
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerText = 'Gönderiliyor...';
+
     // ✅ DEĞİŞİKLİK 3: Mükerrer kayıt kontrolü - Önce veriyi yenile
     await loadProductionData();
 
@@ -807,6 +836,8 @@ async function submitForm(e) {
     const duplicate = checkDuplicateEntry(calisan, tarihValue);
 
     if (duplicate) {
+        btn.disabled = false;
+        btn.innerText = 'Kaydet ve Gönder';
         const dateParts = tarihValue.split('-');
         const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
         document.getElementById('duplicateModalText').textContent =
@@ -814,9 +845,6 @@ async function submitForm(e) {
         document.getElementById('duplicateModal').classList.remove('hidden');
         return;
     }
-
-    const btn = document.getElementById('submitBtn');
-    const originalText = btn.innerText;
 
     const rawDate = tarihValue;
     const dateParts = rawDate.split('-');
@@ -880,8 +908,8 @@ async function submitForm(e) {
         alert("Gönderim sırasında hata oluştu. İnternet bağlantınızı kontrol edin.");
         console.error(error);
     } finally {
-        btn.innerText = originalText;
         btn.disabled = false;
+        btn.innerText = 'Kaydet ve Gönder';
     }
 }
 
@@ -909,17 +937,24 @@ function parseProductionData(data) {
 }
 
 function setInitialDates() {
+    const startDateEl = document.getElementById('startDate');
+    const endDateEl = document.getElementById('endDate');
+
+    if (startDateEl.value && endDateEl.value) return;
+
     const validDates = rawData.map(d => d.dateObj).filter(d => d !== null);
     if (validDates.length > 0) {
         const maxDate = new Date(Math.max(...validDates));
         const minDate = new Date(maxDate);
         minDate.setDate(minDate.getDate() - 1);
-        document.getElementById('startDate').value = minDate.toISOString().split('T')[0];
-        document.getElementById('endDate').value = maxDate.toISOString().split('T')[0];
+        startDateEl.value = minDate.toISOString().split('T')[0];
+        endDateEl.value = maxDate.toISOString().split('T')[0];
     }
 }
 
 function resetFilters() {
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
     setInitialDates();
     updateDashboard();
 }
@@ -1232,6 +1267,7 @@ function handleLogin(e) {
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('currentUserDisplay').innerText = user.calisan;
         document.getElementById('loginError').classList.add('hidden');
+        document.getElementById('loginPassword').value = '';
         localStorage.setItem('sirlama_user', JSON.stringify({username: uname, password: pass}));
     } else {
         document.getElementById('loginError').classList.remove('hidden');
