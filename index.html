@@ -1166,9 +1166,12 @@ function updateDashboard() {
 
     document.getElementById('statWorkers').innerText = activeWorkers.size;
     
-    const biskuviRate = totalProd > 0 ? ((totalBiskuviFire / totalProd) * 100) : 0;
-    const sirlamaRate = totalProd > 0 ? ((totalSirlamaFire / totalProd) * 100) : 0;
-    const toplamFireRate = totalProd > 0 ? ((toplamFire / totalProd) * 100) : 0;
+    // Teslimatçı fireleri ana fireye eklendiği için, fire oranları (yüzdeler) hesaplanırken
+    // paydanın (Toplam Üretim + Teslimatçı Üretimi) olması matematiksel olarak en doğru sonucu verecektir.
+    const baseProdForRates = totalProd + totalSirlamaTeslimatcisiProd;
+    const biskuviRate = baseProdForRates > 0 ? ((totalBiskuviFire / baseProdForRates) * 100) : 0;
+    const sirlamaRate = baseProdForRates > 0 ? ((totalSirlamaFire / baseProdForRates) * 100) : 0;
+    const toplamFireRate = baseProdForRates > 0 ? ((toplamFire / baseProdForRates) * 100) : 0;
 
     const elBiskuviRate = document.getElementById('statBiskuviRate');
     elBiskuviRate.innerText = "%" + biskuviRate.toFixed(2);
