@@ -461,8 +461,8 @@ async function loadProductionData() {
 
 async function loadConstantsData() {
     try {
-        const res = await fetch(constantsUrl + "?t=" + new Date().getTime(), { cache: "no-store" });
-        if (!res.ok) throw new Error("HTTP " + res.status);
+        const res = await fetch(constantsUrl);
+        if (!res.ok) throw new Error("Ağ hatası");
         const data = await res.json();
         
         if (!Array.isArray(data)) throw new Error("Geçersiz veri formatı");
