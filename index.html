@@ -461,13 +461,16 @@ async function loadProductionData() {
 
 async function loadConstantsData() {
     try {
-        const res = await fetch(constantsUrl);
-        if (!res.ok) throw new Error("Ağ hatası");
+        const res = await fetch(constantsUrl + "?t=" + new Date().getTime(), { cache: "no-store" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
         
+        if (!Array.isArray(data)) throw new Error("Geçersiz veri formatı");
+
         constantsData.users = [];
         
-        data.forEach(row => {
+        // Tablodaki olası boş/null satırların hata fırlatması engellendi
+        data.filter(row => row).forEach(row => {
             const keys = Object.keys(row);
             
             const calisanKey = keys.find(k => k.toUpperCase().replace(/\s/g, '') === 'ÇALIŞAN' || k.toUpperCase().replace(/\s/g, '') === 'CALISAN');
@@ -1006,13 +1009,16 @@ async function submitForm(e) {
 }
 
 function parseProductionData(data) {
-    rawData = data.filter(d => d.Tarih).map(d => {
-        const parts = d.Tarih.split('.');
+    // Boş satırların (null) hataya sebep olmasını ve catch bloğunu tetiklemesini engelliyoruz
+    rawData = data.filter(d => d && d.Tarih).map(d => {
+        const dateStr = String(d.Tarih).trim();
+        const parts = dateStr.split('.');
         let dateObj = null;
         if (parts.length === 3) dateObj = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+        else dateObj = new Date(dateStr);
         
         return {
-            tarih: d.Tarih,
+            tarih: dateStr,
             dateObj: dateObj,
             calisan: d["Çalışan"] || "",
             vardiya: d["Vardiya"] || "",
